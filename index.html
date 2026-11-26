@@ -1,0 +1,3166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pollen Patrol: Micro-Botany Mission | KSSM Biology Form 5</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --leaf-dark: #14532d;
+      --leaf-mid: #16a34a;
+      --leaf-light: #86efac;
+      --wood-dark: #78350f;
+      --wood-mid: #b45309;
+    }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #ecfccb 0%, #bbf7d0 45%, #86efac 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: #14532d;
+      user-select: none;
+    }
+    h1, h2, h3, h4, .game-font {
+      font-family: 'Fredoka', sans-serif;
+    }
+    .pollen-particle {
+      position: fixed;
+      border-radius: 9999px;
+      background: radial-gradient(circle, #fef08a 0%, #facc15 60%, transparent 100%);
+      pointer-events: none;
+      z-index: 1;
+      animation: floatPollen 14s infinite ease-in-out;
+      box-shadow: 0 0 12px #fde047;
+    }
+    @keyframes floatPollen {
+      0%, 100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.65; }
+      50% { transform: translateY(-45px) translateX(25px) scale(1.25); opacity: 0.95; }
+    }
+    .btn-wood {
+      background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+      border: 3px solid #78350f;
+      box-shadow: 0 5px 0 #78350f, inset 0 2px 0 rgba(255,255,255,0.45);
+      color: #fff;
+      text-shadow: 0 2px 2px rgba(0,0,0,0.35);
+      transition: all 0.12s ease;
+    }
+    .btn-wood:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .btn-wood:active { transform: translateY(4px); box-shadow: 0 1px 0 #78350f; }
+
+    .btn-leaf {
+      background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+      border: 3px solid #14532d;
+      box-shadow: 0 5px 0 #14532d, inset 0 2px 0 rgba(255,255,255,0.45);
+      color: #fff;
+      text-shadow: 0 2px 2px rgba(0,0,0,0.35);
+      transition: all 0.12s ease;
+    }
+    .btn-leaf:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .btn-leaf:active { transform: translateY(4px); box-shadow: 0 1px 0 #14532d; }
+
+    .btn-sky {
+      background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border: 3px solid #0c4a6e;
+      box-shadow: 0 5px 0 #0c4a6e, inset 0 2px 0 rgba(255,255,255,0.45);
+      color: #fff;
+      text-shadow: 0 2px 2px rgba(0,0,0,0.35);
+      transition: all 0.12s ease;
+    }
+    .btn-sky:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .btn-sky:active { transform: translateY(4px); box-shadow: 0 1px 0 #0c4a6e; }
+
+    .panel-botany {
+      background: rgba(255, 255, 255, 0.94);
+      border: 4px solid #15803d;
+      box-shadow: 0 10px 25px rgba(20, 83, 45, 0.18), inset 0 0 0 3px #dcfce7;
+      border-radius: 1.5rem;
+    }
+
+    @keyframes botFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    .bot-float {
+      animation: botFloat 3.2s ease-in-out infinite;
+    }
+
+    .flip-card { perspective: 1000px; height: 150px; cursor: pointer; }
+    .flip-card-inner {
+      position: relative; width: 100%; height: 100%;
+      transition: transform 0.55s; transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+    .flip-card-front, .flip-card-back {
+      position: absolute; width: 100%; height: 100%;
+      backface-visibility: hidden; border-radius: 1rem;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0.9rem; text-align: center;
+    }
+    .flip-card-back { transform: rotateY(180deg); }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #dcfce7; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #16a34a; border-radius: 4px; }
+  </style>
+</head>
+<body class="relative pb-32">
+
+  <!-- Ambient Floating Pollen Particles -->
+  <div id="pollen-container"></div>
+
+  <!-- TOP PERSISTENT HUD BAR -->
+  <header id="top-hud" class="sticky top-0 z-40 px-3 py-2 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 border-b-4 border-amber-950 shadow-lg text-white">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <!-- Left Navigation -->
+      <div class="flex items-center gap-2">
+        <button onclick="showScreen('menu')" class="btn-wood px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5">
+          <span>🏠</span> <span class="hidden sm:inline">MAIN MENU</span>
+        </button>
+        <button onclick="showScreen('map')" class="btn-leaf px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5">
+          <span>🗺️</span> <span>MISSION HUB</span>
+        </button>
+      </div>
+
+      <!-- Center Dual-Mode Switch (Visible inside Notes Module) -->
+      <div id="notes-mode-toggle" class="hidden items-center bg-amber-950/80 p-1 rounded-2xl border-2 border-amber-600">
+        <button id="btn-mode-notes" onclick="setNotesMode('notes')" class="px-3 py-1 rounded-xl text-xs sm:text-sm font-bold transition-all bg-sky-500 text-white shadow">
+          📖 READ NOTES
+        </button>
+        <button id="btn-mode-interactive" onclick="setNotesMode('interactive')" class="px-3 py-1 rounded-xl text-xs sm:text-sm font-bold transition-all text-amber-200 hover:text-white">
+          🔬 INTERACTIVE & QUIZ
+        </button>
+      </div>
+
+      <!-- Right XP, Package Status & Controls -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Active Package Pill -->
+        <button onclick="showScreen('packages')" id="hud-package-pill" class="bg-emerald-950/90 hover:bg-emerald-900 border-2 border-emerald-400 px-2.5 py-1 rounded-xl flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold text-emerald-200 transition" title="View or Upgrade Package">
+          <span>📦</span>
+          <span id="hud-package-name">Free Pack (RM 0)</span>
+        </button>
+
+        <!-- XP Pill -->
+        <div class="bg-amber-950/90 border-2 border-amber-500 px-2.5 py-1 rounded-xl flex items-center gap-1">
+          <span class="text-yellow-400 text-sm">⚡</span>
+          <span class="text-xs sm:text-sm font-extrabold text-yellow-300"><span id="hud-xp">0</span> XP</span>
+        </div>
+
+        <!-- Progress Pill -->
+        <div class="hidden lg:flex flex-col w-32 bg-amber-950/90 border-2 border-green-500 px-2.5 py-1 rounded-xl">
+          <div class="flex justify-between text-[10px] font-bold text-green-200">
+            <span>MISSIONS</span>
+            <span id="hud-progress-text">0/16</span>
+          </div>
+          <div class="w-full h-1.5 bg-amber-900 rounded-full overflow-hidden mt-0.5">
+            <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Sound & Settings/Help -->
+        <div class="flex items-center gap-1.5">
+          <button id="btn-sound" onclick="toggleSound()" class="bg-amber-700 hover:bg-amber-600 border-2 border-amber-950 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-sm shadow" title="Toggle Sound">
+            🔊
+          </button>
+          <button onclick="toggleModal('modal-settings', true)" class="bg-amber-700 hover:bg-amber-600 border-2 border-amber-950 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-sm shadow" title="Settings & Demo Mode">
+            ⚙️
+          </button>
+          <button onclick="toggleModal('modal-help', true)" class="bg-amber-700 hover:bg-amber-600 border-2 border-amber-950 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow" title="How to Play">
+            ❓
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="relative z-10 max-w-6xl mx-auto px-3 sm:px-6 pt-5">
+
+    <!-- ==========================================
+         SCREEN 1: SPLASH SCREEN & MAIN MENU
+    =========================================== -->
+    <section id="screen-menu" class="py-4 sm:py-6 flex flex-col items-center text-center">
+      <!-- Top Course Pill -->
+      <div class="inline-flex flex-wrap justify-center items-center gap-2 bg-emerald-900/90 text-emerald-100 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold border-2 border-emerald-400 shadow-md mb-4">
+        <span>🎓 ITM 30103 | IT ENTREPRENEURSHIP</span>
+        <span>•</span>
+        <span>KSSM BIOLOGY FORM 5 (CHAPTER 6)</span>
+      </div>
+
+      <!-- Hero Logo Banner -->
+      <div class="relative bg-gradient-to-b from-green-600 via-green-700 to-emerald-900 border-4 border-emerald-950 rounded-3xl p-6 sm:p-9 shadow-2xl max-w-3xl w-full mb-7 overflow-hidden">
+        <div class="absolute -top-10 -left-10 w-36 h-36 bg-yellow-300/20 rounded-full blur-xl"></div>
+        <div class="absolute -bottom-10 -right-10 w-44 h-44 bg-pink-400/20 rounded-full blur-xl"></div>
+
+        <div class="flex justify-center gap-3 text-3xl sm:text-4xl mb-2">
+          <span class="animate-bounce">🌺</span>
+          <span class="animate-pulse">🐝</span>
+          <span class="animate-bounce" style="animation-delay:0.2s">🔬</span>
+          <span class="animate-pulse" style="animation-delay:0.4s">🍎</span>
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-300 to-amber-400 drop-shadow-[0_4px_4px_rgba(0,0,0,0.6)] tracking-wide">
+          POLLEN PATROL
+        </h1>
+        <p class="game-font text-xl sm:text-2xl text-emerald-200 font-bold mt-1 tracking-wider">
+          MICRO-BOTANY MISSION
+        </p>
+        <p class="text-xs sm:text-sm text-emerald-100/90 max-w-xl mx-auto mt-3">
+          Shrink to the cellular scale with <strong>Dr. Flora AI</strong>! Explore our free <strong>Notes & Interactive Module (6.1–6.4)</strong> and unlock 4 exciting Micro-Botany Games.
+        </p>
+
+        <!-- 4 Main Storyboard Buttons -->
+        <div class="mt-7 flex flex-col items-center gap-3.5 max-w-md mx-auto">
+          <button onclick="startJourney()" class="btn-wood w-full py-4 px-6 rounded-2xl text-xl sm:text-2xl font-extrabold flex items-center justify-center gap-3">
+            <span>START JOURNEY</span> <span>▶</span>
+          </button>
+
+          <button onclick="openNotesModule(1, 'notes')" class="btn-sky w-full py-3.5 px-6 rounded-2xl text-base sm:text-lg font-extrabold flex items-center justify-center gap-2">
+            <span>📘 NOTES & INTERACTIVE MODULE</span>
+          </button>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+            <button onclick="showScreen('packages')" class="btn-leaf py-3 px-4 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5">
+              <span>💎 PACKAGES & UNLOCK</span>
+            </button>
+            <button onclick="showScreen('collections')" class="btn-leaf py-3 px-4 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5">
+              <span>🏆 BADGES & CERTIFICATE</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-Part Storyboard Structure Preview -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
+        <div onclick="openNotesModule(1, 'notes')" class="cursor-pointer panel-botany p-3.5 text-left hover:scale-[1.02] transition border-sky-500">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="bg-sky-100 text-sky-800 font-extrabold text-[10px] px-2 py-0.5 rounded-md border border-sky-300">PACK 1 • FREE</span>
+            <span class="text-xl">📘</span>
+          </div>
+          <h3 class="font-extrabold text-sm text-emerald-950">Notes & Interactive Module</h3>
+          <p class="text-[11px] text-emerald-700 mt-1">6.1–6.4 Read Notes, Interactive Diagrams & Quick Quizzes.</p>
+        </div>
+
+        <div onclick="handleGameNodeClick(1)" class="cursor-pointer panel-botany p-3.5 text-left hover:scale-[1.02] transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <span id="menu-tag-g1" class="bg-amber-100 text-amber-800 font-extrabold text-[10px] px-2 py-0.5 rounded-md border border-amber-300">🔒 STARTER PACK</span>
+            <span class="text-xl">🌺</span>
+          </div>
+          <h3 class="font-extrabold text-sm text-emerald-950">Game 1: Get To Know?</h3>
+          <p class="text-[11px] text-emerald-700 mt-1">Subtopic 6.1: Flower structure dissection, sorting & HOTS.</p>
+        </div>
+
+        <div onclick="handleGameNodeClick(2)" class="cursor-pointer panel-botany p-3.5 text-left hover:scale-[1.02] transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <span id="menu-tag-g2" class="bg-amber-100 text-amber-800 font-extrabold text-[10px] px-2 py-0.5 rounded-md border border-amber-300">🔒 STARTER PACK</span>
+            <span class="text-xl">🔬</span>
+          </div>
+          <h3 class="font-extrabold text-sm text-emerald-950">Game 2: Origins of New Life</h3>
+          <p class="text-[11px] text-emerald-700 mt-1">Subtopic 6.2: Pollen & Embryo Sac meiosis/mitosis lab.</p>
+        </div>
+
+        <div onclick="handleGameNodeClick(3)" class="cursor-pointer panel-botany p-3.5 text-left hover:scale-[1.02] transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <span id="menu-tag-g3" class="bg-purple-100 text-purple-800 font-extrabold text-[10px] px-2 py-0.5 rounded-md border border-purple-300">🔒 MASTERY PASS</span>
+            <span class="text-xl">🐝</span>
+          </div>
+          <h3 class="font-extrabold text-sm text-emerald-950">Game 3: Journey to Fertilization</h3>
+          <p class="text-[11px] text-emerald-700 mt-1">Subtopic 6.3: Pollen tube & Double Fertilization (2n/3n).</p>
+        </div>
+
+        <div onclick="handleGameNodeClick(4)" class="cursor-pointer panel-botany p-3.5 text-left hover:scale-[1.02] transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <span id="menu-tag-g4" class="bg-purple-100 text-purple-800 font-extrabold text-[10px] px-2 py-0.5 rounded-md border border-purple-300">🔒 MASTERY PASS</span>
+            <span class="text-xl">🍎</span>
+          </div>
+          <h3 class="font-extrabold text-sm text-emerald-950">Game 4: Seed of Tomorrow</h3>
+          <p class="text-[11px] text-emerald-700 mt-1">Subtopic 6.4: Seed/fruit development & 4 fruit types.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCREEN 2: MISSION HUB / PROGRESS MAP
+    =========================================== -->
+    <section id="screen-map" class="hidden py-4">
+      <div class="panel-botany p-5 sm:p-7 relative overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b-2 border-emerald-200 pb-4 mb-6">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full border border-emerald-300">
+                Storyboard Screen 2 • Mission Hub
+              </span>
+              <span id="hub-pack-badge" class="text-xs font-extrabold bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-400">
+                Current Tier: Notes & Interactive Pack (RM 0)
+              </span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-emerald-950 mt-1.5">
+              🌿 BOTANY EXPEDITION MAP
+            </h2>
+            <p class="text-xs sm:text-sm text-emerald-700">
+              Start with the free <strong>Notes & Interactive Module</strong>, or unlock paid Game Packages to play <strong>Game 1 to Game 4</strong>!
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="showScreen('packages')" class="btn-wood px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold">
+              💎 Packages & Unlock
+            </button>
+          </div>
+        </div>
+
+        <!-- 5-Node Winding Vine Map -->
+        <div id="map-nodes-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 relative">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCREEN 3: NOTES & INTERACTIVE MODULE (6.1 - 6.4)
+    =========================================== -->
+    <section id="screen-notes" class="hidden py-3">
+      <div class="panel-botany p-4 sm:p-6">
+        <!-- Top Header & Subtopic Tabs -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b-2 border-emerald-200 pb-4 mb-4">
+          <div>
+            <span class="text-xs font-extrabold uppercase bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded-full border border-sky-300">
+              Package 1 (Free Access) • Smart Study Hub
+            </span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-emerald-950 mt-1">
+              📘 Notes & Interactive Module (KSSM Form 5 Chapter 6)
+            </h2>
+          </div>
+
+          <button onclick="showScreen('packages')" class="btn-wood px-4 py-2 rounded-xl text-xs font-extrabold">
+            🔓 Unlock Game Pack
+          </button>
+        </div>
+
+        <!-- 4 Subtopic Tabs -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+          <button onclick="openNotesModule(1)" id="note-tab-1" class="p-3 rounded-2xl font-extrabold text-xs sm:text-sm border-3 transition text-center">
+            6.1 Structure of a Flower
+          </button>
+          <button onclick="openNotesModule(2)" id="note-tab-2" class="p-3 rounded-2xl font-extrabold text-xs sm:text-sm border-3 transition text-center">
+            6.2 Pollen & Embryo Sac
+          </button>
+          <button onclick="openNotesModule(3)" id="note-tab-3" class="p-3 rounded-2xl font-extrabold text-xs sm:text-sm border-3 transition text-center">
+            6.3 Double Fertilization
+          </button>
+          <button onclick="openNotesModule(4)" id="note-tab-4" class="p-3 rounded-2xl font-extrabold text-xs sm:text-sm border-3 transition text-center">
+            6.4 Seeds & Fruits
+          </button>
+        </div>
+
+        <!-- Dynamic Notes / Interactive & Quick Quiz Body -->
+        <div id="notes-content-body">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="mt-6 pt-4 border-t-2 border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+          <button onclick="showScreen('map')" class="btn-leaf px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold">
+            ← Back to Mission Hub
+          </button>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button id="btn-next-subtopic" onclick="nextNoteSubtopic()" class="btn-sky px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold">
+              Next Subtopic →
+            </button>
+            <button id="btn-try-related-game" onclick="tryRelatedGame()" class="btn-wood px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold">
+              🎮 Try Game 1: Get To Know?
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCREEN 4: GAMEPLAY WORKSPACE (GAMES 1 - 4)
+    =========================================== -->
+    <section id="screen-game" class="hidden py-3">
+      <!-- Game Header Banner -->
+      <div class="panel-botany p-4 sm:p-5 mb-4 bg-gradient-to-r from-emerald-50 via-green-50 to-amber-50">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div id="game-header-icon" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-md border-2 border-emerald-800">
+              🌺
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="game-header-code" class="text-xs font-extrabold bg-emerald-800 text-white px-2.5 py-0.5 rounded-full">GAME 1 • 6.1</span>
+                <span id="game-header-stars" class="text-sm font-bold text-amber-600">☆☆☆☆ (0/4)</span>
+              </div>
+              <h2 id="game-header-title" class="text-xl sm:text-2xl font-extrabold text-emerald-950">
+                Game 1: Get To Know?
+              </h2>
+            </div>
+          </div>
+
+          <!-- Quick Notes Pop-up Button & Game Switcher -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openQuickNotesModal()" class="btn-sky px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1">
+              <span>📘</span> <span>Quick Notes</span>
+            </button>
+            <div class="flex items-center gap-1">
+              <button onclick="handleGameNodeClick(1)" id="quick-gm-1" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold border-2 transition">G1</button>
+              <button onclick="handleGameNodeClick(2)" id="quick-gm-2" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold border-2 transition">G2</button>
+              <button onclick="handleGameNodeClick(3)" id="quick-gm-3" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold border-2 transition">G3</button>
+              <button onclick="handleGameNodeClick(4)" id="quick-gm-4" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold border-2 transition">G4</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Mission Tabs Bar inside Current Game -->
+      <div id="mission-tabs-bar" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
+        <!-- Populated dynamically -->
+      </div>
+
+      <!-- Active Mission Interactive Workspace -->
+      <div id="mission-workspace" class="panel-botany p-5 sm:p-7 min-h-[420px]">
+        <!-- Populated dynamically per mission (1..16) -->
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCREEN 6: PACKAGES & UNLOCK SCREEN (PRICING IN RM)
+    =========================================== -->
+    <section id="screen-packages" class="hidden py-4">
+      <div class="panel-botany p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b-2 border-emerald-200 pb-4 mb-6">
+          <div>
+            <span class="text-xs font-extrabold uppercase bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-400">
+              Commercial Tiers & Access Plans
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-emerald-950 mt-1">
+              💎 PACKAGES & UNLOCK ACCESS
+            </h2>
+            <p class="text-xs sm:text-sm text-emerald-700">
+              Start learning for free with Package 1, or unlock our interactive Botany Games to master SPM Biology Chapter 6!
+            </p>
+          </div>
+          <button onclick="showScreen('map')" class="btn-leaf px-4 py-2 rounded-xl text-xs sm:text-sm font-bold">
+            ← Back to Mission Hub
+          </button>
+        </div>
+
+        <!-- 3 Pricing Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-7">
+          <!-- Package 1: Free -->
+          <div id="pkg-card-free" class="rounded-3xl border-4 p-6 flex flex-col justify-between bg-sky-50/80 border-sky-400">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase bg-sky-700 text-white px-3 py-1 rounded-full">PACKAGE 1</span>
+                <span class="text-2xl">📘</span>
+              </div>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-3">Notes & Interactive Pack</h3>
+              <div class="my-3">
+                <span class="text-3xl font-extrabold text-sky-900">RM 0</span>
+                <span class="text-xs font-bold text-sky-700"> / Free Forever</span>
+              </div>
+              <ul class="space-y-2 text-xs sm:text-sm text-emerald-900 mt-4">
+                <li>✅ Full <strong>Notes & Interactive Module</strong> (6.1 – 6.4)</li>
+                <li>✅ Clickable Flower Diagram & Cell Division Flows</li>
+                <li>✅ Built-in Quick Concept Quizzes</li>
+                <li class="text-gray-400">🔒 Game 1: Get To Know? (Locked)</li>
+                <li class="text-gray-400">🔒 Game 2: Origins of New Life (Locked)</li>
+                <li class="text-gray-400">🔒 Game 3 & Game 4 (Locked)</li>
+              </ul>
+            </div>
+            <div class="mt-6">
+              <button disabled class="w-full py-3 rounded-xl font-extrabold text-xs sm:text-sm bg-sky-200 text-sky-900 border-2 border-sky-400">
+                ✓ Included by Default
+              </button>
+            </div>
+          </div>
+
+          <!-- Package 2: Starter Game Pack -->
+          <div id="pkg-card-starter" class="rounded-3xl border-4 p-6 flex flex-col justify-between bg-amber-50/90 border-amber-500 shadow-lg">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase bg-amber-600 text-white px-3 py-1 rounded-full">PACKAGE 2</span>
+                <span class="text-2xl">🌺🔬</span>
+              </div>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-3">Starter Game Pack</h3>
+              <div class="my-3">
+                <span class="text-3xl font-extrabold text-amber-800">RM 9.90</span>
+                <span class="text-xs font-bold text-amber-700"> / One-Time Payment</span>
+              </div>
+              <ul class="space-y-2 text-xs sm:text-sm text-emerald-900 mt-4">
+                <li>✅ Everything in <strong>Notes & Interactive Pack</strong></li>
+                <li>✅ Unlocks <strong>Game 1: Get To Know?</strong> (4 Missions)</li>
+                <li>✅ Unlocks <strong>Game 2: Origins of New Life</strong> (4 Missions)</li>
+                <li>✅ Real-time <strong>Dr. Flora AI</strong> Guidance</li>
+                <li class="text-gray-400">🔒 Game 3: Journey to Fertilization (Locked)</li>
+                <li class="text-gray-400">🔒 Game 4: Seed of Tomorrow (Locked)</li>
+              </ul>
+            </div>
+            <div class="mt-6" id="pkg-btn-starter-wrap">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Package 3: Full Mastery Pass -->
+          <div id="pkg-card-mastery" class="rounded-3xl border-4 p-6 flex flex-col justify-between bg-gradient-to-b from-emerald-50 to-yellow-50 border-emerald-600 shadow-xl relative">
+            <div class="absolute -top-3.5 right-5 bg-rose-600 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow">
+              ⭐ BEST VALUE • COMPLETE SPM
+            </div>
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase bg-emerald-800 text-white px-3 py-1 rounded-full">PACKAGE 3</span>
+                <span class="text-2xl">🏆👑</span>
+              </div>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-3">Full Mastery Pass</h3>
+              <div class="my-3">
+                <span id="mastery-price-display" class="text-3xl font-extrabold text-emerald-900">RM 16.90</span>
+                <span id="mastery-price-sub" class="text-xs font-bold text-emerald-700"> / One-Time Full Access</span>
+              </div>
+              <ul class="space-y-2 text-xs sm:text-sm text-emerald-900 mt-4">
+                <li>✅ Full <strong>Notes & Interactive Module</strong> (6.1 – 6.4)</li>
+                <li>✅ <strong>Game 1: Get To Know?</strong> (Subtopic 6.1)</li>
+                <li>✅ <strong>Game 2: Origins of New Life</strong> (Subtopic 6.2)</li>
+                <li>✅ <strong>Game 3: Journey to Fertilization</strong> (Subtopic 6.3)</li>
+                <li>✅ <strong>Game 4: Seed of Tomorrow</strong> (Subtopic 6.4)</li>
+                <li>✅ Printable <strong>Botany Master Certificate</strong></li>
+              </ul>
+            </div>
+            <div class="mt-6" id="pkg-btn-mastery-wrap">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Promo / Lecturer Access Code Redemption Bar -->
+        <div class="bg-emerald-900 text-white rounded-2xl p-5 border-2 border-emerald-500 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <h4 class="font-extrabold text-base text-yellow-300">🎟️ Have an Access Code or Demo Voucher?</h4>
+            <p class="text-xs text-emerald-100 mt-0.5">
+              Enter <code class="bg-emerald-950 px-1.5 py-0.5 rounded text-amber-300">STARTER990</code> for Package 2, or <code class="bg-emerald-950 px-1.5 py-0.5 rounded text-amber-300">MASTERY16</code> / <code class="bg-emerald-950 px-1.5 py-0.5 rounded text-amber-300">POLLENPRO</code> for Package 3.
+            </p>
+          </div>
+          <div class="flex w-full md:w-auto gap-2">
+            <input id="promo-code-input" type="text" placeholder="Enter code (e.g. MASTERY16)"
+              class="px-4 py-2.5 rounded-xl text-emerald-950 font-extrabold text-sm uppercase bg-white border-2 border-amber-400 focus:outline-none w-full md:w-56" />
+            <button onclick="redeemAccessCode()" class="btn-wood px-5 py-2.5 rounded-xl text-sm font-extrabold shrink-0">
+              Activate
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCREEN 7: BADGES & DIGITAL CERTIFICATE
+    =========================================== -->
+    <section id="screen-collections" class="hidden py-4">
+      <div class="panel-botany p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b-2 border-emerald-200 pb-4 mb-6">
+          <div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-emerald-950">🏆 AGENT BADGES & MASTER CERTIFICATE</h2>
+            <p class="text-sm text-emerald-700">Complete all 4 missions in each Game to unlock its Mastery Badge!</p>
+          </div>
+          <button onclick="showScreen('map')" class="btn-leaf px-4 py-2 rounded-xl text-sm font-bold">
+            ← Back to Mission Hub
+          </button>
+        </div>
+
+        <!-- 4 Badges Grid -->
+        <div id="collections-badges-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Master Certificate Generator -->
+        <div class="bg-gradient-to-br from-amber-50 via-yellow-50 to-emerald-50 border-4 border-amber-500 rounded-3xl p-6 sm:p-8 text-center shadow-inner relative">
+          <div class="text-4xl mb-2">🎓🌿🏅</div>
+          <p class="text-xs font-extrabold uppercase tracking-widest text-amber-800">KSSM Form 5 Biology • Chapter 6 Mastery</p>
+          <h3 class="text-2xl sm:text-4xl font-extrabold text-emerald-950 mt-1">MASTER BOTANY AGENT CERTIFICATE</h3>
+          <p class="text-sm text-emerald-800 max-w-xl mx-auto mt-2">
+            This certifies that the Micro-Botany Agent below has explored sexual reproduction in flowering plants with <strong>Dr. Flora AI</strong>.
+          </p>
+
+          <div class="max-w-md mx-auto my-5">
+            <label class="block text-xs font-bold uppercase text-emerald-800 mb-1">Enter Student / Agent Name:</label>
+            <input id="cert-student-name" type="text" placeholder="e.g., Nur Aisyah Binti Ahmad (5 Sains 1)" 
+              class="w-full px-4 py-2.5 rounded-xl border-2 border-emerald-600 text-center font-extrabold text-lg text-emerald-950 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          </div>
+
+          <div class="inline-flex flex-wrap items-center justify-center gap-4 bg-white/90 px-6 py-3 rounded-2xl border-2 border-emerald-300 shadow-sm mb-4">
+            <div>
+              <span class="text-xs text-emerald-600 font-bold block">MISSIONS COMPLETED</span>
+              <span id="cert-missions-score" class="text-xl font-extrabold text-emerald-950">0 / 16</span>
+            </div>
+            <div class="h-8 w-0.5 bg-emerald-200"></div>
+            <div>
+              <span class="text-xs text-emerald-600 font-bold block">TOTAL XP EARNED</span>
+              <span id="cert-xp-score" class="text-xl font-extrabold text-amber-600">0 XP</span>
+            </div>
+            <div class="h-8 w-0.5 bg-emerald-200"></div>
+            <div>
+              <span class="text-xs text-emerald-600 font-bold block">AGENT RANK</span>
+              <span id="cert-rank-title" class="text-xl font-extrabold text-purple-700">Cadet Sprout</span>
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <button onclick="window.print()" class="btn-wood px-6 py-2.5 rounded-xl text-sm font-extrabold">
+              🖨️ Print / Save Certificate (PDF)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       PERSISTENT FLOATING "DR. FLORA AI" ASSISTANT
+  =========================================== -->
+  <div class="fixed bottom-3 right-3 left-3 sm:left-auto z-40 flex items-end justify-end pointer-events-none">
+    <div class="flex items-end gap-3 max-w-lg w-full pointer-events-auto">
+      <div id="flora-bubble" class="flex-1 bg-white/95 border-4 border-emerald-600 rounded-2xl p-3.5 shadow-2xl relative transition-all">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <span class="text-[11px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-300">
+            🤖 Dr. Flora AI • Botany Companion
+          </span>
+          <button onclick="giveRandomTip()" class="text-[11px] font-bold text-sky-700 hover:underline">
+            💡 SPM Exam Tip
+          </button>
+        </div>
+        <p id="flora-message" class="text-xs sm:text-sm font-bold text-emerald-950 leading-snug">
+          Welcome, Agent! Start exploring our free <strong>Notes & Interactive Module</strong>, or unlock the Game Packages to play <strong>Game 1 to Game 4</strong>!
+        </p>
+      </div>
+
+      <!-- Robot Mascot SVG -->
+      <div onclick="giveRandomTip()" class="cursor-pointer bot-float shrink-0 w-20 h-24 sm:w-24 sm:h-28 relative select-none" title="Click Dr. Flora AI for an SPM Biology Tip!">
+        <svg viewBox="0 0 120 140" class="w-full h-full drop-shadow-xl">
+          <path d="M60 22 C40 2, 15 12, 28 32 C38 40, 55 30, 60 22 Z" fill="#22c55e" stroke="#14532d" stroke-width="3"/>
+          <path d="M60 22 C80 2, 105 12, 92 32 C82 40, 65 30, 60 22 Z" fill="#4ade80" stroke="#14532d" stroke-width="3"/>
+          <line x1="60" y1="20" x2="60" y2="34" stroke="#14532d" stroke-width="4" stroke-linecap="round"/>
+          <rect x="20" y="32" width="80" height="58" rx="22" fill="#ecfdf5" stroke="#15803d" stroke-width="4"/>
+          <rect x="30" y="42" width="60" height="38" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="2"/>
+          <circle id="flora-eye-l" cx="46" cy="58" r="6" fill="#34d399"/>
+          <circle id="flora-eye-r" cx="74" cy="58" r="6" fill="#34d399"/>
+          <path id="flora-mouth" d="M50 68 Q60 75 70 68" stroke="#34d399" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path d="M35 94 L85 94 L76 126 C74 132, 46 132, 44 126 Z" fill="#d1fae5" stroke="#15803d" stroke-width="4"/>
+          <circle cx="60" cy="110" r="10" fill="#10b981" stroke="#065f46" stroke-width="2"/>
+          <path d="M56 113 C56 105, 65 105, 65 105 C65 105, 65 114, 56 113 Z" fill="#fef08a"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 1: GAME PACKAGE REQUIRED POP-UP (STORYBOARD POP-UP)
+  =========================================== -->
+  <div id="modal-package-lock" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="panel-botany max-w-md w-full p-6 text-center border-amber-600">
+      <div class="w-16 h-16 mx-auto rounded-full bg-amber-100 border-4 border-amber-500 flex items-center justify-center text-3xl mb-3">
+        🔒
+      </div>
+      <span id="lock-modal-badge" class="text-xs font-extrabold uppercase bg-amber-800 text-white px-3 py-1 rounded-full">
+        PAID GAME PACKAGE REQUIRED
+      </span>
+      <h3 id="lock-modal-title" class="text-2xl font-extrabold text-emerald-950 mt-2">
+        Game 1: Get To Know? is Locked
+      </h3>
+      <p id="lock-modal-desc" class="text-xs sm:text-sm text-emerald-800 mt-2 leading-relaxed">
+        <strong>Notes & Interactive Module</strong> is free to explore, while <strong>Game 1</strong> belongs to our paid Game Packages. Upgrade to unlock interactive missions!
+      </p>
+
+      <div class="mt-5 flex flex-col gap-2.5">
+        <button onclick="toggleModal('modal-package-lock', false); showScreen('packages');" class="btn-wood w-full py-3 rounded-xl font-extrabold text-sm">
+          💎 View Packages & Unlock
+        </button>
+        <button onclick="toggleModal('modal-package-lock', false); openNotesModule(1, 'notes');" class="btn-sky w-full py-2.5 rounded-xl font-extrabold text-xs sm:text-sm">
+          📘 Back to Notes & Interactive Module
+        </button>
+        <button onclick="toggleModal('modal-package-lock', false)" class="text-xs font-bold text-gray-500 hover:underline mt-1">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: SIMULATED PAYMENT CHECKOUT MODAL
+  =========================================== -->
+  <div id="modal-checkout" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="panel-botany max-w-md w-full p-6">
+      <div class="flex items-center justify-between border-b-2 border-emerald-200 pb-3 mb-4">
+        <h3 class="text-xl font-extrabold text-emerald-950">💳 Package Activation & Payment</h3>
+        <button onclick="toggleModal('modal-checkout', false)" class="bg-red-100 text-red-700 font-bold w-8 h-8 rounded-lg">✕</button>
+      </div>
+
+      <div class="bg-amber-50 p-4 rounded-2xl border-2 border-amber-400 mb-4">
+        <div class="text-xs font-bold text-amber-800">SELECTED PACKAGE:</div>
+        <div id="checkout-pkg-title" class="text-lg font-extrabold text-emerald-950">Starter Game Pack</div>
+        <div id="checkout-pkg-price" class="text-2xl font-extrabold text-amber-700 mt-1">RM 9.90</div>
+        <p id="checkout-pkg-items" class="text-xs text-emerald-800 mt-1">Unlocks Game 1: Get To Know? & Game 2: Origins of New Life.</p>
+      </div>
+
+      <div class="space-y-2 mb-5 text-xs font-bold text-emerald-900">
+        <div class="p-2.5 rounded-xl border-2 border-emerald-400 bg-emerald-50 flex items-center justify-between">
+          <span>🏦 Online Banking (FPX Malaysia)</span>
+          <span class="text-emerald-700">Instant</span>
+        </div>
+        <div class="p-2.5 rounded-xl border-2 border-emerald-200 bg-white flex items-center justify-between">
+          <span>📱 Touch 'n Go eWallet / GrabPay</span>
+          <span class="text-emerald-700">Instant</span>
+        </div>
+      </div>
+
+      <button onclick="confirmSimulatedPayment()" class="btn-leaf w-full py-3.5 rounded-xl font-extrabold text-sm">
+        ✅ Simulate Payment Success & Unlock Now
+      </button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 3: LEVEL COMPLETE SUMMARY MODAL (SCREEN 5)
+  =========================================== -->
+  <div id="modal-level-summary" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="panel-botany max-w-md w-full p-6 text-center border-amber-500">
+      <div class="text-4xl mb-2">🎉🏅🌟</div>
+      <span id="summary-badge" class="text-xs font-extrabold uppercase bg-green-700 text-white px-3 py-1 rounded-full">
+        GAME 1 COMPLETED
+      </span>
+      <h3 id="summary-title" class="text-2xl font-extrabold text-emerald-950 mt-2">
+        Get To Know? Mastered!
+      </h3>
+      <p id="summary-desc" class="text-xs sm:text-sm text-emerald-800 mt-2">
+        Awesome work, Agent! You completed all 4 missions in this Game and earned your Station Mastery Badge!
+      </p>
+
+      <div class="grid grid-cols-2 gap-3 my-4 bg-amber-50 p-3 rounded-2xl border-2 border-amber-300">
+        <div>
+          <div class="text-[11px] font-bold text-amber-800">ACCURACY</div>
+          <div class="text-xl font-extrabold text-emerald-950">100%</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-amber-800">TOTAL XP</div>
+          <div id="summary-xp" class="text-xl font-extrabold text-amber-600">400 XP</div>
+        </div>
+      </div>
+
+      <div id="summary-actions" class="flex flex-col gap-2.5 mt-4">
+        <!-- Populated dynamically: Next Level or Unlock Next Package + Replay Level -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 4: IN-GAME QUICK NOTES POP-UP
+  =========================================== -->
+  <div id="modal-quick-notes" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="panel-botany max-w-xl w-full p-6 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b-2 border-emerald-200 pb-3 mb-3">
+        <h3 id="qn-title" class="text-lg sm:text-xl font-extrabold text-emerald-950">📘 Quick Revision Notes</h3>
+        <button onclick="toggleModal('modal-quick-notes', false)" class="bg-red-100 text-red-700 font-bold w-8 h-8 rounded-lg">✕</button>
+      </div>
+      <div id="qn-body" class="text-xs sm:text-sm text-emerald-900 space-y-2.5 leading-relaxed">
+        <!-- Populated dynamically based on current game -->
+      </div>
+      <div class="mt-5 text-right">
+        <button onclick="toggleModal('modal-quick-notes', false)" class="btn-leaf px-5 py-2 rounded-xl font-bold text-xs">
+          Back to Mission
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 5: SETTINGS & DEMO / LECTURER MODE
+  =========================================== -->
+  <div id="modal-settings" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="panel-botany max-w-md w-full p-6">
+      <div class="flex items-center justify-between border-b-2 border-emerald-200 pb-3 mb-4">
+        <h3 class="text-xl font-extrabold text-emerald-950">⚙️ Settings & Lecturer Demo Controls</h3>
+        <button onclick="toggleModal('modal-settings', false)" class="bg-red-100 text-red-700 font-bold w-8 h-8 rounded-lg">✕</button>
+      </div>
+
+      <div class="space-y-4 text-sm">
+        <div class="bg-purple-50 p-4 rounded-2xl border-2 border-purple-300">
+          <h4 class="font-extrabold text-purple-950">🎓 Evaluator / Lecturer Quick Tier Switch</h4>
+          <p class="text-xs text-purple-800 mt-1 mb-3">
+            Use these buttons during presentation to test how locked packages behave or unlock all 4 games immediately:
+          </p>
+          <div class="grid grid-cols-1 gap-2">
+            <button onclick="setPackageTier('free'); toggleModal('modal-settings', false);" class="py-2 px-3 rounded-xl font-extrabold text-xs bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-400">
+              1. Reset to Free Tier (Notes Only • Games 1–4 Locked)
+            </button>
+            <button onclick="setPackageTier('starter'); toggleModal('modal-settings', false);" class="py-2 px-3 rounded-xl font-extrabold text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400">
+              2. Activate Starter Pack (RM 9.90 • Games 1 & 2)
+            </button>
+            <button onclick="setPackageTier('mastery'); toggleModal('modal-settings', false);" class="py-2 px-3 rounded-xl font-extrabold text-xs bg-green-600 hover:bg-green-700 text-white border border-green-900">
+              3. Activate Full Mastery Pass (RM 16.90 • All 4 Games)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 6: HOW TO PLAY HELP MODAL
+  =========================================== -->
+  <div id="modal-help" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="panel-botany max-w-xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b-2 border-emerald-200 pb-3 mb-4">
+        <h3 class="text-xl font-extrabold text-emerald-950">📖 HOW TO PLAY POLLEN PATROL</h3>
+        <button onclick="toggleModal('modal-help', false)" class="bg-red-100 text-red-700 font-bold w-8 h-8 rounded-lg">✕</button>
+      </div>
+      <div class="space-y-3 text-xs sm:text-sm text-emerald-900">
+        <div class="bg-sky-50 p-3.5 rounded-xl border border-sky-200">
+          <div class="font-extrabold text-sky-950">1. Notes & Interactive Module (Package 1 — Free)</div>
+          <p class="mt-1">Read concise KSSM Biology notes for Subtopics 6.1–6.4 or toggle to <strong>Interactive & Quiz</strong> to inspect diagrams and test yourself.</p>
+        </div>
+        <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200">
+          <div class="font-extrabold text-amber-950">2. Unlocking Game Packages (Packages 2 & 3)</div>
+          <p class="mt-1"><strong>Starter Game Pack (RM 9.90)</strong> unlocks <em>Game 1: Get To Know?</em> and <em>Game 2: Origins of New Life</em>. <strong>Full Mastery Pass (RM 16.90)</strong> unlocks all 4 Games plus your Master Botany Certificate.</p>
+        </div>
+        <div class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200">
+          <div class="font-extrabold text-emerald-950">3. Level Progression & Dr. Flora AI</div>
+          <p class="mt-1">Complete all 4 interactive missions inside each Game to unlock the next Game and earn its Mastery Badge. <strong>Dr. Flora AI</strong> guides you with instant feedback at every step!</p>
+        </div>
+      </div>
+      <div class="mt-5 text-right">
+        <button onclick="toggleModal('modal-help', false)" class="btn-leaf px-5 py-2 rounded-xl font-bold text-xs">Let's Go!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       APPLICATION LOGIC, PACKAGE SYSTEM & 16 MISSIONS
+  =========================================== -->
+  <script>
+    /**************************************************************
+     * 1. APPLICATION STATE & PACKAGE CONFIGURATION
+     **************************************************************/
+    const state = {
+      screen: 'menu',
+      packageTier: 'free', // 'free' | 'starter' | 'mastery'
+      pendingCheckoutTier: null,
+      currentNoteSubtopic: 1, // 1..4
+      notesMode: 'notes',     // 'notes' | 'interactive'
+      currentGameId: 1,       // 1..4
+      currentMissionId: 1,    // 1..16
+      xp: 0,
+      completedMissions: {},
+      soundEnabled: true,
+      // Interactive states
+      note63Stage: 0,
+      quickQuizSolved: {},
+      m1SelectedLabel: null,
+      m1Placed: {},
+      m2Placed: {},
+      m3SelectedLeft: null,
+      m3Matched: {},
+      m4Answers: {},
+      m5Step: 0,
+      m6MitosisCount: 0,
+      m6PlacedRegions: { top: false, center: false, bottom: false },
+      m7Fixed: {},
+      m8Answers: {},
+      m9Answers: {},
+      m10Step: 0,
+      m11Fusions: { zygote: false, endosperm: false, ploidyVerified: false },
+      m12Answers: {},
+      m13SelectedLeft: null,
+      m13Matched: {},
+      m14Answers: {},
+      m15Placed: {},
+      m16Answers: {}
+    };
+
+    const GAMES = [
+      {
+        id: 1,
+        code: '6.1',
+        title: 'Game 1: Get To Know?',
+        shortTitle: 'Get To Know?',
+        subtitle: 'Structure of a Flower',
+        icon: '🌺',
+        badgeName: 'Flora Anatomist',
+        requiredTier: 'starter',
+        color: 'from-pink-500 to-rose-600',
+        missions: [
+          { id: 1, title: 'Virtual Flower Dissection', type: 'Interactive Diagram' },
+          { id: 2, title: 'Organ Sorter Challenge', type: 'Categorization' },
+          { id: 3, title: 'Floral Function Matcher', type: 'Matching Lab' },
+          { id: 4, title: 'Flora Scanner HOTS Quiz', type: 'Diagnostic Quiz' }
+        ]
+      },
+      {
+        id: 2,
+        code: '6.2',
+        title: 'Game 2: Origins of New Life',
+        shortTitle: 'Origins of New Life',
+        subtitle: 'Pollen & Embryo Sac',
+        icon: '🔬',
+        badgeName: 'Cell Architect',
+        requiredTier: 'starter',
+        color: 'from-purple-500 to-indigo-600',
+        missions: [
+          { id: 5, title: 'The Pollen Factory', type: 'Sequence Simulator' },
+          { id: 6, title: 'Embryo Sac 3x Mitosis', type: '8-Nuclei Builder' },
+          { id: 7, title: 'Cell Division Detective', type: 'Spot the Error' },
+          { id: 8, title: 'Gamete Comparison Matrix', type: 'Interactive Table' }
+        ]
+      },
+      {
+        id: 3,
+        code: '6.3',
+        title: 'Game 3: Journey to Fertilization',
+        shortTitle: 'Journey to Fertilization',
+        subtitle: 'Pollination & Double Fertilization',
+        icon: '🐝',
+        badgeName: 'Fusion Navigator',
+        requiredTier: 'mastery',
+        color: 'from-amber-500 to-orange-600',
+        missions: [
+          { id: 9, title: 'Pollination Agent Dispatch', type: 'Decision Making' },
+          { id: 10, title: 'Pollen Tube Navigator', type: 'Path Checkpoint' },
+          { id: 11, title: 'Double Fertilization Lab', type: '2n & 3n Fusion Sim' },
+          { id: 12, title: 'Plant Survival HOTS', type: 'Scenario Challenge' }
+        ]
+      },
+      {
+        id: 4,
+        code: '6.4',
+        title: 'Game 4: Seed of Tomorrow',
+        shortTitle: 'Seed of Tomorrow',
+        subtitle: 'Seeds & Fruits Development',
+        icon: '🍎',
+        badgeName: 'Master Botanist',
+        requiredTier: 'mastery',
+        color: 'from-emerald-500 to-green-700',
+        missions: [
+          { id: 13, title: 'Post-Fertilization Transformer', type: 'Before/After Lab' },
+          { id: 14, title: 'Seed Embryo Anatomy', type: 'Seed Inspector' },
+          { id: 15, title: 'Fruit Market Classifier', type: '4-Type Sorting' },
+          { id: 16, title: 'Commander Boss Assessment', type: 'Final Mastery' }
+        ]
+      }
+    ];
+
+    // Web Audio Synthesizer
+    let audioCtx = null;
+    function playSfx(type) {
+      if (!state.soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(680, now + 0.06);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.06);
+          osc.start(now); osc.stop(now + 0.06);
+        } else if (type === 'success') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.32);
+          osc.start(now); osc.stop(now + 0.32);
+        } else if (type === 'error') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(150, now + 0.22);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+          osc.start(now); osc.stop(now + 0.22);
+        } else if (type === 'fanfare') {
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'triangle';
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.setValueAtTime(freq, now + idx * 0.09);
+            g.gain.setValueAtTime(0.18, now + idx * 0.09);
+            g.gain.linearRampToValueAtTime(0.01, now + idx * 0.09 + 0.25);
+            o.start(now + idx * 0.09);
+            o.stop(now + idx * 0.09 + 0.25);
+          });
+        }
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      document.getElementById('btn-sound').textContent = state.soundEnabled ? '🔊' : '🔇';
+      if (state.soundEnabled) playSfx('click');
+    }
+
+    function toggleModal(id, show) {
+      playSfx('click');
+      const el = document.getElementById(id);
+      if (show) el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    /**************************************************************
+     * 2. DR. FLORA AI FEEDBACK & SPM TIPS
+     **************************************************************/
+    const SPM_TIPS = [
+      "SPM Tip 6.1: Remember! The Stamen (male) = Anther + Filament, while the Carpel (female) = Stigma + Style + Ovary!",
+      "SPM Tip 6.2: Pollen formation = 1 Meiosis (2n -> 4 microspores n) + 1x Mitosis (Tube nucleus + Generative nucleus).",
+      "SPM Tip 6.2: Embryo sac formation = 1 Meiosis (3 megaspores degenerate, 1 survives) + 3x Mitosis (8 haploid nuclei across 7 cells).",
+      "SPM Tip 6.3: Double Fertilization = Male Gamete 1 (n) + Egg (n) -> Zygote (2n), AND Male Gamete 2 (n) + 2 Polar Nuclei (2n) -> Endosperm (3n)!",
+      "SPM Tip 6.4: Post-fertilization: Ovary -> Fruit; Ovary Wall -> Pericarp; Ovule -> Seed; Integument -> Testa!"
+    ];
+
+    function floraSpeak(msg, mood = 'happy') {
+      const bubble = document.getElementById('flora-bubble');
+      const textEl = document.getElementById('flora-message');
+      const eyeL = document.getElementById('flora-eye-l');
+      const eyeR = document.getElementById('flora-eye-r');
+      textEl.innerHTML = msg;
+
+      bubble.classList.remove('border-emerald-600', 'border-amber-500', 'border-red-500');
+      if (mood === 'error') {
+        bubble.classList.add('border-red-500');
+        eyeL.setAttribute('fill', '#f87171');
+        eyeR.setAttribute('fill', '#f87171');
+      } else if (mood === 'celebrate') {
+        bubble.classList.add('border-amber-500');
+        eyeL.setAttribute('fill', '#facc15');
+        eyeR.setAttribute('fill', '#facc15');
+      } else {
+        bubble.classList.add('border-emerald-600');
+        eyeL.setAttribute('fill', '#34d399');
+        eyeR.setAttribute('fill', '#34d399');
+      }
+    }
+
+    function giveRandomTip() {
+      playSfx('click');
+      const tip = SPM_TIPS[Math.floor(Math.random() * SPM_TIPS.length)];
+      floraSpeak(tip, 'celebrate');
+    }
+
+    /**************************************************************
+     * 3. PACKAGE ACCESS & PROGRESSION LOGIC
+     **************************************************************/
+    function hasPackageAccessForGame(gameId) {
+      if (state.packageTier === 'mastery') return true;
+      if (state.packageTier === 'starter' && (gameId === 1 || gameId === 2)) return true;
+      return false;
+    }
+
+    function getGameDoneCount(gameId) {
+      const gm = GAMES.find(g => g.id === gameId);
+      return gm.missions.filter(m => state.completedMissions[m.id]).length;
+    }
+
+    function isProgressionUnlocked(gameId) {
+      if (gameId === 1) return true;
+      return getGameDoneCount(gameId - 1) === 4;
+    }
+
+    function handleGameNodeClick(gameId) {
+      const gm = GAMES.find(g => g.id === gameId);
+      // 1. Check Paid Package Lock first (matching Storyboard)
+      if (!hasPackageAccessForGame(gameId)) {
+        playSfx('error');
+        const reqPackName = gm.requiredTier === 'starter' ? 'Starter Game Pack (RM 9.90)' : 'Full Mastery Pass (RM 16.90)';
+        document.getElementById('lock-modal-badge').textContent = `REQUIRES ${reqPackName.toUpperCase()}`;
+        document.getElementById('lock-modal-title').textContent = `${gm.title} is Locked`;
+        document.getElementById('lock-modal-desc').innerHTML = `
+          <strong>Notes & Interactive Module</strong> is free, while <strong>${gm.title}</strong> requires the <strong>${reqPackName}</strong>. Upgrade your package to enter this mission!
+        `;
+        floraSpeak(`<strong>${gm.title}</strong> is locked behind the <strong>${reqPackName}</strong>! Click <strong>View Packages & Unlock</strong> or continue exploring the free Notes Module.`, 'error');
+        toggleModal('modal-package-lock', true);
+        return;
+      }
+
+      // 2. Check Level Progression Lock (must finish previous Game's 4 missions)
+      if (!isProgressionUnlocked(gameId)) {
+        playSfx('error');
+        const prevGm = GAMES.find(g => g.id === gameId - 1);
+        floraSpeak(`Hold on, Agent! Complete all 4 missions in <strong>${prevGm.title}</strong> first to unlock <strong>${gm.title}</strong>!`, 'error');
+        return;
+      }
+
+      // 3. Open Gameplay Screen
+      openGame(gameId);
+    }
+
+    function initiateCheckout(tier) {
+      playSfx('click');
+      state.pendingCheckoutTier = tier;
+      if (tier === 'starter') {
+        document.getElementById('checkout-pkg-title').textContent = 'Package 2: Starter Game Pack';
+        document.getElementById('checkout-pkg-price').textContent = 'RM 9.90';
+        document.getElementById('checkout-pkg-items').textContent = 'Unlocks Game 1: Get To Know? & Game 2: Origins of New Life.';
+      } else {
+        const isUpgrade = state.packageTier === 'starter';
+        document.getElementById('checkout-pkg-title').textContent = isUpgrade ? 'Upgrade to Package 3: Full Mastery Pass' : 'Package 3: Full Mastery Pass';
+        document.getElementById('checkout-pkg-price').textContent = isUpgrade ? 'RM 7.00 (Upgrade Price)' : 'RM 16.90';
+        document.getElementById('checkout-pkg-items').textContent = 'Unlocks All 4 Games (Game 1 to Game 4) + Printable Botany Master Certificate.';
+      }
+      toggleModal('modal-checkout', true);
+    }
+
+    function confirmSimulatedPayment() {
+      toggleModal('modal-checkout', false);
+      setPackageTier(state.pendingCheckoutTier || 'mastery');
+      showScreen('map');
+    }
+
+    function redeemAccessCode() {
+      const input = document.getElementById('promo-code-input');
+      const code = (input.value || '').trim().toUpperCase();
+      if (code === 'STARTER990') {
+        input.value = '';
+        setPackageTier('starter');
+        showScreen('map');
+      } else if (code === 'MASTERY16' || code === 'POLLENPRO') {
+        input.value = '';
+        setPackageTier('mastery');
+        showScreen('map');
+      } else {
+        playSfx('error');
+        floraSpeak("Invalid code! Try <strong>STARTER990</strong> (for Game 1 & 2) or <strong>MASTERY16</strong> (for All 4 Games).", 'error');
+      }
+    }
+
+    function setPackageTier(tier) {
+      state.packageTier = tier;
+      playSfx('fanfare');
+      updateHUD();
+      if (state.screen === 'map') renderMissionHub();
+      if (state.screen === 'packages') renderPackagesScreen();
+
+      if (tier === 'free') {
+        floraSpeak("Package set to <strong>Notes & Interactive Pack (RM 0)</strong>. Games 1–4 are now locked.", 'happy');
+      } else if (tier === 'starter') {
+        floraSpeak("🎉 <strong>Starter Game Pack (RM 9.90)</strong> Activated! <strong>Game 1: Get To Know?</strong> and <strong>Game 2: Origins of New Life</strong> are now unlocked!", 'celebrate');
+      } else if (tier === 'mastery') {
+        floraSpeak("🎉 <strong>Full Mastery Pass (RM 16.90)</strong> Activated! All 4 Games (16 Missions) and your Master Certificate are now unlocked!", 'celebrate');
+      }
+    }
+
+    function updateHUD() {
+      const totalDone = Object.keys(state.completedMissions).length;
+      document.getElementById('hud-xp').textContent = state.xp.toLocaleString();
+      document.getElementById('hud-progress-text').textContent = `${totalDone}/16`;
+      document.getElementById('hud-progress-bar').style.width = `${(totalDone / 16) * 100}%`;
+
+      const packLabels = {
+        free: 'Free Pack (RM 0)',
+        starter: 'Starter Pack (RM 9.90)',
+        mastery: 'Full Mastery Pass'
+      };
+      document.getElementById('hud-package-name').textContent = packLabels[state.packageTier];
+
+      const hubBadge = document.getElementById('hub-pack-badge');
+      if (hubBadge) hubBadge.textContent = `Active Plan: ${packLabels[state.packageTier]}`;
+
+      // Update Menu cards badges
+      const g1Tag = document.getElementById('menu-tag-g1');
+      const g2Tag = document.getElementById('menu-tag-g2');
+      const g3Tag = document.getElementById('menu-tag-g3');
+      const g4Tag = document.getElementById('menu-tag-g4');
+      if (g1Tag) {
+        const sUnlocked = hasPackageAccessForGame(1);
+        const mUnlocked = hasPackageAccessForGame(3);
+        g1Tag.textContent = sUnlocked ? '✅ UNLOCKED' : '🔒 STARTER PACK';
+        g2Tag.textContent = sUnlocked ? '✅ UNLOCKED' : '🔒 STARTER PACK';
+        g3Tag.textContent = mUnlocked ? '✅ UNLOCKED' : '🔒 MASTERY PASS';
+        g4Tag.textContent = mUnlocked ? '✅ UNLOCKED' : '🔒 MASTERY PASS';
+      }
+    }
+
+    /**************************************************************
+     * 4. SCREEN NAVIGATION
+     **************************************************************/
+    function showScreen(screenName) {
+      playSfx('click');
+      state.screen = screenName;
+      ['menu', 'map', 'notes', 'game', 'packages', 'collections'].forEach(s => {
+        document.getElementById('screen-' + s).classList.add('hidden');
+      });
+      document.getElementById('screen-' + screenName).classList.remove('hidden');
+
+      const notesToggle = document.getElementById('notes-mode-toggle');
+      if (screenName === 'notes') {
+        notesToggle.classList.remove('hidden');
+        notesToggle.classList.add('flex');
+      } else {
+        notesToggle.classList.add('hidden');
+        notesToggle.classList.remove('flex');
+      }
+
+      if (screenName === 'map') renderMissionHub();
+      if (screenName === 'packages') renderPackagesScreen();
+      if (screenName === 'collections') renderCollections();
+      updateHUD();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function startJourney() {
+      showScreen('map');
+      if (state.packageTier === 'free') {
+        floraSpeak("Welcome to the <strong>Mission Hub</strong>! Explore the free <strong>Notes & Interactive Module</strong> first, or click <strong>Game 1: Get To Know?</strong> to unlock our Game Packages!");
+      } else {
+        floraSpeak("Welcome back to the <strong>Mission Hub</strong>! Select your unlocked Game node to continue your Micro-Botany Mission!");
+      }
+    }
+
+    /**************************************************************
+     * 5. RENDER SCREEN 2: MISSION HUB (5 NODES)
+     **************************************************************/
+    function renderMissionHub() {
+      const grid = document.getElementById('map-nodes-grid');
+
+      // Node 0: Notes & Interactive Module (Always Unlocked in Free Pack)
+      const node0Html = `
+        <div class="rounded-3xl border-4 border-sky-600 bg-gradient-to-b from-sky-50 to-white shadow-xl p-4 flex flex-col justify-between transition hover:-translate-y-1">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-700 text-white">MODULE 0 • FREE</span>
+              <span class="text-xs font-extrabold text-sky-700">6.1 – 6.4</span>
+            </div>
+            <div class="w-16 h-16 mx-auto my-2 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 border-4 border-amber-300 shadow flex items-center justify-center text-3xl">
+              📘
+            </div>
+            <h3 class="text-center font-extrabold text-base text-emerald-950 mt-2">Notes & Interactive Module</h3>
+            <p class="text-center text-[11px] font-bold text-sky-700 mb-3">Smart Notes, Diagrams & Quick Quizzes</p>
+            <div class="bg-sky-100/70 p-2.5 rounded-xl border border-sky-200 text-[11px] text-sky-950 space-y-1 font-bold">
+              <div>✓ 6.1 Structure of a Flower</div>
+              <div>✓ 6.2 Pollen & Embryo Sac</div>
+              <div>✓ 6.3 Double Fertilization</div>
+              <div>✓ 6.4 Seeds & Fruits</div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button onclick="openNotesModule(1, 'notes')" class="btn-sky w-full py-2.5 rounded-xl text-xs font-extrabold">
+              📖 OPEN MODULE
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Nodes 1 to 4: Game 1 to Game 4
+      const gameNodesHtml = GAMES.map(gm => {
+        const packOk = hasPackageAccessForGame(gm.id);
+        const progOk = isProgressionUnlocked(gm.id);
+        const done = getGameDoneCount(gm.id);
+        const stars = '⭐'.repeat(done) + '☆'.repeat(4 - done);
+
+        let statusBadge = '';
+        let btnHtml = '';
+
+        if (!packOk) {
+          const packLabel = gm.requiredTier === 'starter' ? 'STARTER PACK' : 'MASTERY PASS';
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-800 text-white">🔒 ${packLabel}</span>`;
+          btnHtml = `
+            <button onclick="handleGameNodeClick(${gm.id})" class="btn-wood w-full py-2.5 rounded-xl text-xs font-extrabold">
+              🔓 UNLOCK PACK
+            </button>
+          `;
+        } else if (!progOk) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gray-600 text-white">🔒 COMPLETE G${gm.id - 1}</span>`;
+          btnHtml = `
+            <button onclick="handleGameNodeClick(${gm.id})" class="w-full py-2.5 rounded-xl text-xs font-extrabold bg-gray-300 text-gray-700 border-2 border-gray-400">
+              🔒 FINISH GAME ${gm.id - 1} FIRST
+            </button>
+          `;
+        } else {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-green-700 text-white">${done === 4 ? 'COMPLETED ✓' : 'UNLOCKED'}</span>`;
+          btnHtml = `
+            <button onclick="openGame(${gm.id})" class="btn-leaf w-full py-2.5 rounded-xl text-xs font-extrabold">
+              🎮 ENTER GAME (${done}/4)
+            </button>
+          `;
+        }
+
+        return `
+          <div class="rounded-3xl border-4 ${packOk && progOk ? 'border-emerald-700 bg-white shadow-xl' : 'border-gray-400 bg-gray-100/95'} p-4 flex flex-col justify-between transition hover:-translate-y-1">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                ${statusBadge}
+                <span class="text-xs font-bold text-amber-500">${stars}</span>
+              </div>
+              <div class="w-16 h-16 mx-auto my-2 rounded-full bg-gradient-to-br ${packOk && progOk ? gm.color : 'from-gray-400 to-gray-500'} border-4 border-amber-300 shadow flex items-center justify-center text-3xl text-white">
+                ${packOk && progOk ? gm.icon : '🔒'}
+              </div>
+              <h3 class="text-center font-extrabold text-base text-emerald-950 mt-2">${gm.title}</h3>
+              <p class="text-center text-[11px] font-bold text-emerald-700 mb-3">Subtopic ${gm.code}: ${gm.subtitle}</p>
+              <div class="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 text-[11px] space-y-1">
+                ${gm.missions.map((m, i) => `
+                  <div class="flex items-center justify-between font-bold text-emerald-950">
+                    <span class="truncate pr-1">${i + 1}. ${m.title}</span>
+                    <span>${state.completedMissions[m.id] ? '✅' : '⚪'}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <div class="mt-4">
+              ${btnHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      grid.innerHTML = node0Html + gameNodesHtml;
+    }
+
+    /**************************************************************
+     * 6. SCREEN 3: NOTES & INTERACTIVE MODULE (6.1 - 6.4)
+     **************************************************************/
+    const FLOWER_HOTSPOTS = {
+      stigma: {
+        name: 'Stigma', group: 'Carpel (Female Organ)',
+        role: 'Located at the top of the carpel. Secretes a sticky sugary solution to trap pollen grains and stimulate germination.',
+        tip: 'Exam keyword: "Sticky surface with sugary solution for pollen germination".'
+      },
+      style: {
+        name: 'Style', group: 'Carpel (Female Organ)',
+        role: 'Slender stalk connecting the stigma to the ovary; holds the stigma up and provides a pathway for pollen tube growth.',
+        tip: 'The tube nucleus secretes enzymes to digest style tissues as the pollen tube grows down.'
+      },
+      ovary: {
+        name: 'Ovary', group: 'Carpel (Female Organ)',
+        role: 'Swollen base of the carpel containing ovules. Develops into the FRUIT after double fertilization.',
+        tip: 'Post-fertilization transformation: Ovary -> Fruit; Ovary wall -> Pericarp.'
+      },
+      ovule: {
+        name: 'Ovule', group: 'Carpel (Female Organ)',
+        role: 'Structure inside the ovary containing the embryo sac (with the egg cell). Develops into a SEED after fertilization.',
+        tip: 'Surrounded by protective integuments with a tiny opening called the micropyle.'
+      },
+      anther: {
+        name: 'Anther', group: 'Stamen (Male Organ)',
+        role: 'Bilobed structure containing 4 pollen sacs where pollen grains are formed via meiosis and mitosis.',
+        tip: 'Contains diploid microspore mother cells (2n).'
+      },
+      filament: {
+        name: 'Filament', group: 'Stamen (Male Organ)',
+        role: 'Long slender stalk that supports the anther in an exposed position for pollination.',
+        tip: 'Contains vascular tissue to transport water and nutrients to the anther.'
+      },
+      petal: {
+        name: 'Petal (Corolla)', group: 'Non-Reproductive Structure',
+        role: 'Large, brightly colored modified leaves that attract insects and birds for pollination.',
+        tip: 'Wind-pollinated flowers have small, dull petals instead.'
+      },
+      sepal: {
+        name: 'Sepal (Calyx)', group: 'Non-Reproductive Structure',
+        role: 'Green leaf-like structures at the flower base that protect the flower bud before it opens.',
+        tip: 'Collectively known as the calyx.'
+      }
+    };
+
+    function openNotesModule(subtopicId, mode = null) {
+      state.currentNoteSubtopic = subtopicId;
+      if (mode) state.notesMode = mode;
+      showScreen('notes');
+      setNotesMode(state.notesMode);
+    }
+
+    function setNotesMode(mode) {
+      playSfx('click');
+      state.notesMode = mode;
+      const btnNotes = document.getElementById('btn-mode-notes');
+      const btnInter = document.getElementById('btn-mode-interactive');
+      if (mode === 'notes') {
+        btnNotes.className = 'px-3 py-1 rounded-xl text-xs sm:text-sm font-bold transition-all bg-sky-500 text-white shadow';
+        btnInter.className = 'px-3 py-1 rounded-xl text-xs sm:text-sm font-bold transition-all text-amber-200 hover:text-white';
+      } else {
+        btnInter.className = 'px-3 py-1 rounded-xl text-xs sm:text-sm font-bold transition-all bg-amber-500 text-amber-950 shadow';
+        btnNotes.className = 'px-3 py-1 rounded-xl text-xs sm:text-sm font-bold transition-all text-amber-200 hover:text-white';
+      }
+      renderNotesContent();
+    }
+
+    function nextNoteSubtopic() {
+      const next = state.currentNoteSubtopic < 4 ? state.currentNoteSubtopic + 1 : 1;
+      openNotesModule(next);
+    }
+
+    function tryRelatedGame() {
+      handleGameNodeClick(state.currentNoteSubtopic);
+    }
+
+    function renderNotesContent() {
+      const sub = state.currentNoteSubtopic;
+      const gm = GAMES.find(g => g.id === sub);
+
+      // Update Tabs styling
+      [1, 2, 3, 4].forEach(i => {
+        const tab = document.getElementById(`note-tab-${i}`);
+        if (i === sub) {
+          tab.className = 'p-3 rounded-2xl font-extrabold text-xs sm:text-sm border-3 bg-emerald-600 text-white border-emerald-950 shadow';
+        } else {
+          tab.className = 'p-3 rounded-2xl font-extrabold text-xs sm:text-sm border-3 bg-emerald-50 text-emerald-950 border-emerald-300 hover:bg-emerald-100';
+        }
+      });
+
+      // Update Bottom Buttons
+      const nextBtn = document.getElementById('btn-next-subtopic');
+      nextBtn.textContent = sub < 4 ? `Next Subtopic (6.${sub + 1}) →` : `Back to Subtopic 6.1 ↺`;
+      const gameBtn = document.getElementById('btn-try-related-game');
+      const unlocked = hasPackageAccessForGame(sub);
+      gameBtn.textContent = `${unlocked ? '🎮' : '🔒'} Try ${gm.title}`;
+
+      const body = document.getElementById('notes-content-body');
+
+      // ================= SUBTOPIC 6.1 =================
+      if (sub === 1) {
+        if (state.notesMode === 'notes') {
+          floraSpeak("📖 <strong>Read Notes 6.1:</strong> Review the male organ (<strong>Stamen</strong>) and female organ (<strong>Carpel</strong>), then switch to <strong>Interactive & Quiz</strong> above!");
+          body.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="bg-amber-50 p-5 rounded-2xl border-2 border-amber-400">
+                <span class="text-xs font-extrabold bg-amber-600 text-white px-2.5 py-0.5 rounded-full">♂ MALE REPRODUCTIVE ORGAN</span>
+                <h3 class="text-xl font-extrabold text-amber-950 mt-2">Stamen (Androecium)</h3>
+                <ul class="mt-3 space-y-2 text-xs sm:text-sm text-amber-950">
+                  <li>• <strong>Anther:</strong> Bilobed structure with 4 pollen sacs that produce haploid pollen grains containing male gametes.</li>
+                  <li>• <strong>Filament:</strong> Slender stalk that holds the anther up to disperse pollen effectively.</li>
+                </ul>
+              </div>
+              <div class="bg-pink-50 p-5 rounded-2xl border-2 border-pink-400">
+                <span class="text-xs font-extrabold bg-pink-600 text-white px-2.5 py-0.5 rounded-full">♀ FEMALE REPRODUCTIVE ORGAN</span>
+                <h3 class="text-xl font-extrabold text-pink-950 mt-2">Carpel / Pistil (Gynoecium)</h3>
+                <ul class="mt-3 space-y-2 text-xs sm:text-sm text-pink-950">
+                  <li>• <strong>Stigma:</strong> Sticky top surface secreting sugary solution to trap and germinate pollen grains.</li>
+                  <li>• <strong>Style:</strong> Stalk connecting stigma to ovary; pathway for pollen tube growth.</li>
+                  <li>• <strong>Ovary & Ovule:</strong> Ovary protects ovules (which contain the embryo sac & egg cell).</li>
+                </ul>
+              </div>
+              <div class="md:col-span-2 bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-300 text-xs sm:text-sm">
+                <strong>🌿 Non-Reproductive Structures:</strong> <strong>Petals (Corolla)</strong> are brightly colored to attract insect pollinators, while green <strong>Sepals (Calyx)</strong> enclose and protect the flower bud before blooming.
+              </div>
+            </div>
+          `;
+        } else {
+          floraSpeak("🔬 <strong>Interactive 6.1:</strong> Tap any flower part on the diagram to inspect its role, and answer the Quick Quiz on the right!");
+          body.innerHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+              <div class="lg:col-span-7 bg-gradient-to-b from-sky-50 to-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 text-center">
+                <p class="text-xs font-bold text-emerald-800 mb-2">👆 Tap any floral structure to inspect:</p>
+                <div class="flex flex-wrap justify-center gap-1.5 mb-3">
+                  ${Object.keys(FLOWER_HOTSPOTS).map(k => `
+                    <button onclick="inspectFlowerPart('${k}')" class="px-3 py-1 rounded-lg text-xs font-extrabold bg-white border-2 border-emerald-500 hover:bg-amber-100">
+                      ${FLOWER_HOTSPOTS[k].name}
+                    </button>
+                  `).join('')}
+                </div>
+                <div id="note61-detail" class="p-4 rounded-2xl border-2 bg-white border-pink-400 text-left">
+                  <span id="note61-group" class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded bg-pink-100 text-pink-900">Carpel (Female Organ)</span>
+                  <h4 id="note61-name" class="text-lg font-extrabold text-emerald-950 mt-1">Stigma</h4>
+                  <p id="note61-role" class="text-xs sm:text-sm text-emerald-900 mt-1">Located at the top of the carpel. Secretes a sticky sugary solution to trap pollen grains and stimulate germination.</p>
+                  <div class="mt-2 text-xs font-bold text-rose-800 bg-rose-50 p-2 rounded-lg">💡 <span id="note61-tip">Exam keyword: "Sticky surface with sugary solution for pollen germination".</span></div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-5">
+                ${renderQuickQuizBox('q61', 'Quick Quiz 6.1', 'Which group of structures forms the female reproductive organ (Carpel) of a flower?', [
+                  'Anther, Filament, and Petal',
+                  'Stigma, Style, Ovary, and Ovule',
+                  'Sepal, Pedicel, and Anther'
+                ], 1, 'Correct! Stigma, Style, Ovary, and Ovule together form the Carpel (female organ).')}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // ================= SUBTOPIC 6.2 =================
+      else if (sub === 2) {
+        if (state.notesMode === 'notes') {
+          floraSpeak("📖 <strong>Read Notes 6.2:</strong> Notice the key exam difference: Pollen formation uses <strong>Meiosis + 1x Mitosis</strong>, while Embryo Sac formation uses <strong>Meiosis + 3x Mitosis (8 nuclei)</strong>!");
+          body.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="bg-amber-50 p-5 rounded-2xl border-2 border-amber-400">
+                <span class="text-xs font-extrabold bg-amber-600 text-white px-2.5 py-0.5 rounded-full">ANTHER • POLLEN GRAIN</span>
+                <h3 class="text-lg font-extrabold text-amber-950 mt-2">Development of Pollen Grains</h3>
+                <ol class="list-decimal list-inside mt-3 space-y-2 text-xs sm:text-sm text-amber-950">
+                  <li>Diploid <strong>microspore mother cell (2n)</strong> undergoes <strong>meiosis</strong> to form a tetrad of <strong>4 haploid microspores (n)</strong>.</li>
+                  <li>Each microspore nucleus undergoes <strong>mitosis (1x)</strong> to produce <strong>2 nuclei</strong>: a <strong>tube nucleus (n)</strong> and a <strong>generative nucleus (n)</strong>.</li>
+                </ol>
+              </div>
+              <div class="bg-pink-50 p-5 rounded-2xl border-2 border-pink-400">
+                <span class="text-xs font-extrabold bg-pink-600 text-white px-2.5 py-0.5 rounded-full">OVULE • EMBRYO SAC</span>
+                <h3 class="text-lg font-extrabold text-pink-950 mt-2">Development of Embryo Sac</h3>
+                <ol class="list-decimal list-inside mt-3 space-y-2 text-xs sm:text-sm text-pink-950">
+                  <li>Diploid <strong>megaspore mother cell (2n)</strong> undergoes <strong>meiosis</strong> to form <strong>4 haploid megaspores (n)</strong>.</li>
+                  <li><strong>3 megaspores degenerate</strong>; <strong>1 surviving megaspore (n)</strong> undergoes <strong>mitosis 3 times</strong> to form <strong>8 nuclei in 7 cells</strong> (3 antipodal cells, 2 polar nuclei, 1 egg cell, 2 synergids).</li>
+                </ol>
+              </div>
+            </div>
+          `;
+        } else {
+          floraSpeak("🔬 <strong>Interactive 6.2:</strong> Inspect the side-by-side Meiosis & Mitosis pathways and test yourself with the Quick Quiz!");
+          body.innerHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+              <div class="lg:col-span-7 space-y-3">
+                <div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-400 text-xs sm:text-sm">
+                  <div class="font-extrabold text-amber-900 mb-1">🌼 ANTHER PATHWAY:</div>
+                  <div class="bg-white p-3 rounded-xl border border-amber-300 font-bold text-center">
+                    Mother Cell (2n) ➔ <span class="text-red-600">[Meiosis]</span> ➔ 4 Microspores (n) ➔ <span class="text-sky-600">[1x Mitosis]</span> ➔ Pollen Grain (Tube + Generative Nuclei)
+                  </div>
+                </div>
+                <div class="p-4 rounded-2xl bg-pink-50 border-2 border-pink-400 text-xs sm:text-sm">
+                  <div class="font-extrabold text-pink-900 mb-1">🌷 OVULE PATHWAY:</div>
+                  <div class="bg-white p-3 rounded-xl border border-pink-300 font-bold text-center">
+                    Mother Cell (2n) ➔ <span class="text-red-600">[Meiosis]</span> ➔ 4 Megaspores (3 degenerate, 1 survives) ➔ <span class="text-sky-600">[3x Mitosis]</span> ➔ Embryo Sac (8 Nuclei, 7 Cells)
+                  </div>
+                </div>
+              </div>
+              <div class="lg:col-span-5">
+                ${renderQuickQuizBox('q62', 'Quick Quiz 6.2', 'How many times does the surviving haploid megaspore divide by mitosis to form a mature 8-nuclei embryo sac?', [
+                  '1 time (1 -> 2 nuclei)',
+                  '2 times (1 -> 2 -> 4 nuclei)',
+                  '3 times (1 -> 2 -> 4 -> 8 nuclei)'
+                ], 2, 'Spot on! Three rounds of mitosis double the nucleus count from 1 -> 2 -> 4 -> 8 haploid nuclei!')}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // ================= SUBTOPIC 6.3 =================
+      else if (sub === 3) {
+        if (state.notesMode === 'notes') {
+          floraSpeak("📖 <strong>Read Notes 6.3:</strong> Double Fertilization involves TWO separate fusions inside the embryo sac: <strong>2n Zygote</strong> and <strong>3n Endosperm Nucleus</strong>!");
+          body.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="bg-sky-50 p-5 rounded-2xl border-2 border-sky-400">
+                <span class="text-xs font-extrabold bg-sky-700 text-white px-2.5 py-0.5 rounded-full">POLLINATION & TUBE GROWTH</span>
+                <h3 class="text-lg font-extrabold text-sky-950 mt-2">Journey Down the Style</h3>
+                <ul class="mt-3 space-y-2 text-xs sm:text-sm text-sky-950">
+                  <li>• Pollen lands on sticky stigma and germinates into a <strong>pollen tube</strong>.</li>
+                  <li>• <strong>Tube nucleus</strong> leads growth down the style to the <strong>micropyle</strong>, then degenerates.</li>
+                  <li>• <strong>Generative nucleus (n)</strong> divides by <strong>mitosis</strong> to form <strong>2 male gametes (n)</strong>.</li>
+                </ul>
+              </div>
+              <div class="bg-amber-50 p-5 rounded-2xl border-2 border-amber-400">
+                <span class="text-xs font-extrabold bg-amber-700 text-white px-2.5 py-0.5 rounded-full">DOUBLE FERTILIZATION</span>
+                <h3 class="text-lg font-extrabold text-amber-950 mt-2">Two Simultaneous Fusions</h3>
+                <ul class="mt-3 space-y-2 text-xs sm:text-sm text-amber-950">
+                  <li>• <strong>Fusion 1:</strong> Male Gamete 1 (n) + Egg Cell (n) ➔ <strong>Diploid Zygote (2n)</strong> (becomes embryo).</li>
+                  <li>• <strong>Fusion 2:</strong> Male Gamete 2 (n) + 2 Polar Nuclei (2n) ➔ <strong>Triploid Endosperm Nucleus (3n)</strong> (food storage).</li>
+                </ul>
+              </div>
+            </div>
+          `;
+        } else {
+          const stages = [
+            '1. Pollen grain lands on sticky stigma & germinates into a pollen tube.',
+            '2. Pollen tube grows down style; Generative Nucleus divides by mitosis into 2 Male Gametes (n).',
+            '3. Pollen tube enters ovule via MICROPYLE; Tube Nucleus degenerates.',
+            '4. Double Fertilization: 1st Male Gamete + Egg = Zygote (2n); 2nd Male Gamete + 2 Polar Nuclei = Endosperm (3n).'
+          ];
+          floraSpeak("🔬 <strong>Interactive 6.3:</strong> Step through the 4 stages of Double Fertilization and complete the Quick Quiz!");
+          body.innerHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+              <div class="lg:col-span-7 bg-amber-50 p-4 rounded-2xl border-2 border-amber-400">
+                <div class="grid grid-cols-4 gap-1.5 mb-3">
+                  ${[0, 1, 2, 3].map(idx => `
+                    <button onclick="state.note63Stage=${idx}; playSfx('click'); renderNotesContent();"
+                      class="py-2 rounded-xl font-extrabold text-xs border-2 ${state.note63Stage === idx ? 'bg-amber-600 text-white border-amber-900' : 'bg-white text-amber-950 border-amber-300'}">
+                      Step ${idx + 1}
+                    </button>
+                  `).join('')}
+                </div>
+                <div class="bg-white p-4 rounded-xl border-2 border-emerald-400 font-extrabold text-sm text-emerald-950">
+                  ${stages[state.note63Stage]}
+                </div>
+              </div>
+              <div class="lg:col-span-5">
+                ${renderQuickQuizBox('q63', 'Quick Quiz 6.3', 'What is formed when the second haploid male gamete (n) fuses with the two polar nuclei (2n)?', [
+                  'Diploid Zygote (2n)',
+                  'Triploid Endosperm Nucleus (3n)',
+                  'Haploid Tube Nucleus (n)'
+                ], 1, 'Correct! 1 male gamete (n) + 2 polar nuclei (2n) = Triploid Endosperm Nucleus (3n)!')}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // ================= SUBTOPIC 6.4 =================
+      else if (sub === 4) {
+        if (state.notesMode === 'notes') {
+          floraSpeak("📖 <strong>Read Notes 6.4:</strong> Memorize the post-fertilization transformation table and the 4 KSSM Fruit Types!");
+          body.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="bg-emerald-50 p-5 rounded-2xl border-2 border-emerald-400">
+                <span class="text-xs font-extrabold bg-emerald-800 text-white px-2.5 py-0.5 rounded-full">POST-FERTILIZATION OUTCOMES</span>
+                <h3 class="text-lg font-extrabold text-emerald-950 mt-2">Floral Part Transformations</h3>
+                <ul class="mt-3 space-y-1.5 text-xs sm:text-sm text-emerald-950">
+                  <li>• <strong>Ovary</strong> ➔ <strong>Fruit</strong> (Ovary wall ➔ <strong>Pericarp</strong>)</li>
+                  <li>• <strong>Ovule</strong> ➔ <strong>Seed</strong> (Integuments ➔ <strong>Testa / Seed coat</strong>)</li>
+                  <li>• <strong>Diploid Zygote (2n)</strong> ➔ <strong>Embryo</strong> (Plumule, radicle, cotyledon)</li>
+                  <li>• <strong>Triploid Endosperm (3n)</strong> ➔ <strong>Endosperm Tissue</strong></li>
+                </ul>
+              </div>
+              <div class="bg-amber-50 p-5 rounded-2xl border-2 border-amber-400">
+                <span class="text-xs font-extrabold bg-amber-700 text-white px-2.5 py-0.5 rounded-full">4 KSSM FRUIT TYPES</span>
+                <h3 class="text-lg font-extrabold text-amber-950 mt-2">Classification of Fruits</h3>
+                <ul class="mt-3 space-y-1.5 text-xs sm:text-sm text-amber-950">
+                  <li>• <strong>Simple Fruit:</strong> 1 flower, 1 carpel (e.g., Mango, Pea).</li>
+                  <li>• <strong>Aggregate Fruit:</strong> 1 flower, many free carpels (e.g., Raspberry).</li>
+                  <li>• <strong>Multiple Fruit:</strong> Cluster of flowers / inflorescence (e.g., Pineapple).</li>
+                  <li>• <strong>Accessory Fruit:</strong> Develops from receptacle (e.g., Apple, Strawberry).</li>
+                </ul>
+              </div>
+            </div>
+          `;
+        } else {
+          floraSpeak("🔬 <strong>Interactive 6.4:</strong> Click any Transformation Flip-Card to reveal its post-fertilization outcome, then answer the Quick Quiz!");
+          body.innerHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+              <div class="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                ${[
+                  { before: 'Ovary', after: 'Fruit', icon: '🍑' },
+                  { before: 'Ovary Wall', after: 'Pericarp', icon: '🥭' },
+                  { before: 'Ovule', after: 'Seed', icon: '🌱' },
+                  { before: 'Integument', after: 'Testa (Coat)', icon: '🛡️' },
+                  { before: 'Zygote (2n)', after: 'Embryo', icon: '🌿' },
+                  { before: '3n Nucleus', after: 'Endosperm', icon: '🌽' }
+                ].map(c => `
+                  <div onclick="this.classList.toggle('flipped'); playSfx('click')" class="flip-card" style="height:115px;">
+                    <div class="flip-card-inner">
+                      <div class="flip-card-front bg-emerald-100 border-2 border-emerald-500">
+                        <span class="text-xl">${c.icon}</span>
+                        <div class="font-extrabold text-xs text-emerald-950 mt-1">${c.before}</div>
+                        <div class="text-[10px] text-emerald-700">Tap to flip ↻</div>
+                      </div>
+                      <div class="flip-card-back bg-amber-100 border-2 border-amber-500">
+                        <div class="text-[10px] font-bold text-amber-800">BECOMES:</div>
+                        <div class="font-extrabold text-sm text-amber-950 mt-1">➔ ${c.after}</div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="lg:col-span-5">
+                ${renderQuickQuizBox('q64', 'Quick Quiz 6.4', 'After fertilization, which floral structures develop into the Seed and the Testa respectively?', [
+                  'Ovary -> Seed; Ovary Wall -> Testa',
+                  'Ovule -> Seed; Integument -> Testa',
+                  'Zygote -> Seed; Petal -> Testa'
+                ], 1, 'Awesome! The Ovule develops into the Seed and its protective Integument becomes the Testa!')}
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function renderQuickQuizBox(qKey, label, question, options, correctIdx, explanation) {
+      const solved = state.quickQuizSolved[qKey];
+      return `
+        <div class="p-4 rounded-2xl border-3 ${solved ? 'bg-green-50 border-green-500' : 'bg-white border-amber-400'} shadow">
+          <span class="text-[10px] font-extrabold uppercase bg-amber-600 text-white px-2.5 py-0.5 rounded-full">${label}</span>
+          <p class="font-extrabold text-xs sm:text-sm text-emerald-950 mt-2 mb-3">${question}</p>
+          <div class="space-y-1.5">
+            ${options.map((opt, idx) => `
+              <button ${solved ? 'disabled' : ''} onclick="answerQuickQuiz('${qKey}', ${idx}, ${correctIdx}, \`${explanation.replace(/`/g, "'")}\`)"
+                class="w-full p-2.5 rounded-xl border-2 text-left text-xs font-bold transition ${
+                  solved && idx === correctIdx ? 'bg-green-600 text-white border-green-800' :
+                  solved ? 'bg-gray-100 text-gray-400 border-gray-200' :
+                  'bg-emerald-50 hover:bg-amber-100 text-emerald-950 border-emerald-300'
+                }">
+                ${String.fromCharCode(65 + idx)}. ${opt}
+              </button>
+            `).join('')}
+          </div>
+          ${solved ? `<div class="mt-2 text-[11px] font-bold text-green-900 bg-green-100 p-2 rounded-lg">✅ ${explanation}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function answerQuickQuiz(qKey, chosen, correct, exp) {
+      if (chosen === correct) {
+        if (!state.quickQuizSolved[qKey]) {
+          state.quickQuizSolved[qKey] = true;
+          state.xp += 25;
+          updateHUD();
+        }
+        playSfx('success');
+        floraSpeak(`Quick Quiz Solved! +25 XP! ${exp}`, 'celebrate');
+        renderNotesContent();
+      } else {
+        playSfx('error');
+        floraSpeak("Not quite! Review the interactive diagram on the left and try again!", 'error');
+      }
+    }
+
+    function inspectFlowerPart(key) {
+      playSfx('click');
+      const item = FLOWER_HOTSPOTS[key];
+      document.getElementById('note61-name').textContent = item.name;
+      document.getElementById('note61-group').textContent = item.group;
+      document.getElementById('note61-role').textContent = item.role;
+      document.getElementById('note61-tip').textContent = item.tip;
+      floraSpeak(`<strong>${item.name} (${item.group}):</strong> ${item.role}`);
+    }
+
+    /**************************************************************
+     * 7. SCREEN 6: PACKAGES & UNLOCK RENDERER
+     **************************************************************/
+    function renderPackagesScreen() {
+      const tier = state.packageTier;
+      const starterWrap = document.getElementById('pkg-btn-starter-wrap');
+      const masteryWrap = document.getElementById('pkg-btn-mastery-wrap');
+      const priceDisp = document.getElementById('mastery-price-display');
+      const priceSub = document.getElementById('mastery-price-sub');
+
+      if (tier === 'free') {
+        starterWrap.innerHTML = `<button onclick="initiateCheckout('starter')" class="btn-wood w-full py-3 rounded-xl font-extrabold text-xs sm:text-sm">🔓 Unlock Starter Pack (RM 9.90)</button>`;
+        masteryWrap.innerHTML = `<button onclick="initiateCheckout('mastery')" class="btn-leaf w-full py-3 rounded-xl font-extrabold text-xs sm:text-sm">👑 Unlock Full Mastery (RM 16.90)</button>`;
+        priceDisp.textContent = 'RM 16.90';
+        priceSub.textContent = '/ One-Time Full Access';
+      } else if (tier === 'starter') {
+        starterWrap.innerHTML = `<button disabled class="w-full py-3 rounded-xl font-extrabold text-xs sm:text-sm bg-green-200 text-green-900 border-2 border-green-500">✅ Active Package</button>`;
+        masteryWrap.innerHTML = `<button onclick="initiateCheckout('mastery')" class="btn-leaf w-full py-3 rounded-xl font-extrabold text-xs sm:text-sm">⬆️ Upgrade to Full Mastery (RM 7.00)</button>`;
+        priceDisp.textContent = 'RM 7.00';
+        priceSub.textContent = '/ Upgrade Balance from Starter';
+      } else {
+        starterWrap.innerHTML = `<button disabled class="w-full py-3 rounded-xl font-extrabold text-xs sm:text-sm bg-green-200 text-green-900 border-2 border-green-500">✅ Included in Mastery Pass</button>`;
+        masteryWrap.innerHTML = `<button disabled class="w-full py-3 rounded-xl font-extrabold text-xs sm:text-sm bg-green-600 text-white border-2 border-green-900">👑 Full Mastery Pass Active ✓</button>`;
+        priceDisp.textContent = 'UNLOCKED';
+        priceSub.textContent = 'All 4 Games & Certificate Active';
+      }
+    }
+
+    /**************************************************************
+     * 8. SCREEN 4 & 5: GAMEPLAY WORKSPACE & LEVEL COMPLETE SUMMARY
+     **************************************************************/
+    function openGame(gameId, missionId = null) {
+      state.currentGameId = gameId;
+      const gm = GAMES.find(g => g.id === gameId);
+      state.currentMissionId = missionId || gm.missions[0].id;
+      showScreen('game');
+      renderGameHeader();
+      renderMissionTabs();
+      renderMissionWorkspace(state.currentMissionId);
+    }
+
+    function renderGameHeader() {
+      const gm = GAMES.find(g => g.id === state.currentGameId);
+      const done = getGameDoneCount(gm.id);
+      document.getElementById('game-header-icon').textContent = gm.icon;
+      document.getElementById('game-header-code').textContent = `GAME ${gm.id} • SUBTOPIC ${gm.code}`;
+      document.getElementById('game-header-title').textContent = gm.title;
+      document.getElementById('game-header-stars').textContent = `${'⭐'.repeat(done)}${'☆'.repeat(4 - done)} (${done}/4 Missions)`;
+
+      [1, 2, 3, 4].forEach(id => {
+        const btn = document.getElementById(`quick-gm-${id}`);
+        if (id === gm.id) {
+          btn.className = 'px-2.5 py-1.5 rounded-xl text-xs font-extrabold border-2 bg-emerald-700 text-white border-emerald-950 shadow';
+        } else {
+          btn.className = 'px-2.5 py-1.5 rounded-xl text-xs font-extrabold border-2 bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100';
+        }
+      });
+    }
+
+    function openQuickNotesModal() {
+      const gm = GAMES.find(g => g.id === state.currentGameId);
+      document.getElementById('qn-title').textContent = `📘 Quick Notes: Subtopic ${gm.code} (${gm.subtitle})`;
+      const summaries = {
+        1: `<p><strong>♂ Stamen (Male):</strong> <em>Anther</em> (produces pollen grains) + <em>Filament</em> (supports anther).</p>
+            <p><strong>♀ Carpel (Female):</strong> <em>Stigma</em> (sticky surface for pollen germination) + <em>Style</em> (pathway to ovary) + <em>Ovary</em> (becomes fruit) + <em>Ovule</em> (becomes seed).</p>`,
+        2: `<p><strong>🌼 Pollen Grain (Anther):</strong> Diploid Microspore Mother Cell (2n) ➔ <em>Meiosis</em> ➔ 4 Haploid Microspores (n) ➔ <em>1x Mitosis</em> ➔ Tube Nucleus + Generative Nucleus.</p>
+            <p><strong>🌷 Embryo Sac (Ovule):</strong> Diploid Megaspore Mother Cell (2n) ➔ <em>Meiosis</em> ➔ 4 Megaspores (3 degenerate, 1 survives) ➔ <em>3x Mitosis</em> ➔ 8 Nuclei in 7 Cells (3 antipodal, 2 polar nuclei, 1 egg, 2 synergids).</p>`,
+        3: `<p><strong>1. Pollen Tube Growth:</strong> Tube nucleus guides tube down style through <em>Micropyle</em> then degenerates. Generative nucleus divides by mitosis into 2 male gametes (n).</p>
+            <p><strong>2. Double Fertilization:</strong> Male Gamete 1 (n) + Egg (n) ➔ <em>Diploid Zygote (2n)</em>; Male Gamete 2 (n) + 2 Polar Nuclei (2n) ➔ <em>Triploid Endosperm Nucleus (3n)</em>.</p>`,
+        4: `<p><strong>Post-Fertilization:</strong> Ovary ➔ <em>Fruit</em>; Ovary wall ➔ <em>Pericarp</em>; Ovule ➔ <em>Seed</em>; Integument ➔ <em>Testa</em>; Zygote (2n) ➔ <em>Embryo</em>; 3n Nucleus ➔ <em>Endosperm Tissue</em>.</p>
+            <p><strong>4 Fruit Types:</strong> Simple (1 carpel), Aggregate (many free carpels, 1 flower), Multiple (cluster of flowers), Accessory (receptacle).</p>`
+      };
+      document.getElementById('qn-body').innerHTML = summaries[gm.id];
+      toggleModal('modal-quick-notes', true);
+    }
+
+    function renderMissionTabs() {
+      const gm = GAMES.find(g => g.id === state.currentGameId);
+      const bar = document.getElementById('mission-tabs-bar');
+      bar.innerHTML = gm.missions.map((m, idx) => {
+        const active = m.id === state.currentMissionId;
+        const done = !!state.completedMissions[m.id];
+        return `
+          <button onclick="selectMission(${m.id})" 
+            class="p-3 rounded-2xl border-3 text-left transition flex flex-col justify-between ${active ? 'bg-amber-400 border-amber-900 text-amber-950 shadow-lg scale-[1.02]' : 'bg-white/90 border-emerald-600 text-emerald-950 hover:bg-emerald-50'}">
+            <div class="flex items-center justify-between w-full">
+              <span class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded ${active ? 'bg-amber-900 text-white' : 'bg-emerald-100 text-emerald-800'}">
+                Mission ${idx + 1}/4
+              </span>
+              <span class="text-sm">${done ? '✅' : '⭕'}</span>
+            </div>
+            <div class="font-extrabold text-xs sm:text-sm mt-1.5 leading-tight">${m.title}</div>
+            <div class="text-[10px] font-semibold opacity-75 mt-0.5">${m.type}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectMission(missionId) {
+      playSfx('click');
+      state.currentMissionId = missionId;
+      renderMissionTabs();
+      renderMissionWorkspace(missionId);
+    }
+
+    function completeMission(missionId, customSuccessMsg) {
+      const firstTime = !state.completedMissions[missionId];
+      if (firstTime) {
+        state.completedMissions[missionId] = true;
+        state.xp += 100;
+        playSfx('fanfare');
+      } else {
+        playSfx('success');
+      }
+      updateHUD();
+      renderGameHeader();
+      renderMissionTabs();
+
+      const suffix = firstTime
+        ? ` <span class="inline-block bg-yellow-300 text-amber-950 px-2 py-0.5 rounded font-extrabold ml-1">+100 XP!</span>`
+        : ` <span class="inline-block bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold ml-1">(Completed ✓)</span>`;
+
+      floraSpeak(customSuccessMsg + suffix, 'celebrate');
+
+      // Check if all 4 missions in the current Game are now complete -> Show Screen 5 Level Summary Modal!
+      const gm = GAMES.find(g => g.id === state.currentGameId);
+      if (getGameDoneCount(gm.id) === 4) {
+        setTimeout(() => showLevelCompleteModal(gm.id), 450);
+      }
+    }
+
+    function showLevelCompleteModal(gameId) {
+      const gm = GAMES.find(g => g.id === gameId);
+      document.getElementById('summary-badge').textContent = `GAME ${gm.id} COMPLETED • BADGE UNLOCKED`;
+      document.getElementById('summary-title').textContent = `${gm.shortTitle} Mastered!`;
+      document.getElementById('summary-xp').textContent = `${state.xp} XP`;
+
+      const actionsEl = document.getElementById('summary-actions');
+      if (gameId < 4) {
+        const nextGm = GAMES.find(g => g.id === gameId + 1);
+        const nextUnlocked = hasPackageAccessForGame(nextGm.id);
+        if (nextUnlocked) {
+          document.getElementById('summary-desc').textContent = `Congratulations! You earned the "${gm.badgeName}" Badge and unlocked ${nextGm.title}!`;
+          actionsEl.innerHTML = `
+            <button onclick="toggleModal('modal-level-summary', false); openGame(${nextGm.id});" class="btn-wood w-full py-3 rounded-xl font-extrabold text-sm">
+              ▶ Next Level: ${nextGm.title}
+            </button>
+            <button onclick="toggleModal('modal-level-summary', false);" class="btn-leaf w-full py-2.5 rounded-xl font-extrabold text-xs">
+              Replay Level
+            </button>
+          `;
+        } else {
+          document.getElementById('summary-desc').textContent = `Awesome job! You finished ${gm.title}, and the next level (${nextGm.title}) is part of the Full Mastery Pass!`;
+          actionsEl.innerHTML = `
+            <button onclick="toggleModal('modal-level-summary', false); showScreen('packages');" class="btn-wood w-full py-3 rounded-xl font-extrabold text-sm">
+              💎 Unlock Next Package (Full Mastery Pass)
+            </button>
+            <button onclick="toggleModal('modal-level-summary', false); showScreen('map');" class="btn-sky w-full py-2.5 rounded-xl font-extrabold text-xs">
+              Back to Mission Hub
+            </button>
+          `;
+        }
+      } else {
+        document.getElementById('summary-desc').textContent = `Incredible! You have mastered all 4 Games (16 Missions) across KSSM Form 5 Biology Chapter 6!`;
+        actionsEl.innerHTML = `
+          <button onclick="toggleModal('modal-level-summary', false); showScreen('collections');" class="btn-wood w-full py-3 rounded-xl font-extrabold text-sm">
+            🏆 Claim Master Botany Certificate
+          </button>
+          <button onclick="toggleModal('modal-level-summary', false);" class="btn-leaf w-full py-2.5 rounded-xl font-extrabold text-xs">
+            Replay Final Level
+          </button>
+        `;
+      }
+      toggleModal('modal-level-summary', true);
+    }
+
+    function goToNextMission() {
+      if (state.currentMissionId < 16) {
+        const nextId = state.currentMissionId + 1;
+        const nextGameId = Math.ceil(nextId / 4);
+        if (nextGameId !== state.currentGameId) {
+          handleGameNodeClick(nextGameId);
+        } else {
+          openGame(nextGameId, nextId);
+        }
+      } else {
+        showScreen('collections');
+      }
+    }
+
+    function renderCollections() {
+      const totalDone = Object.keys(state.completedMissions).length;
+      const grid = document.getElementById('collections-badges-grid');
+      grid.innerHTML = GAMES.map(gm => {
+        const done = getGameDoneCount(gm.id);
+        const earned = done === 4;
+        return `
+          <div class="p-4 rounded-2xl border-3 ${earned ? 'bg-amber-50 border-amber-400 shadow-md' : 'bg-gray-100 border-gray-300 opacity-70'} text-center">
+            <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl ${earned ? 'bg-gradient-to-br ' + gm.color + ' text-white border-4 border-yellow-300 shadow' : 'bg-gray-300 grayscale'}">
+              ${gm.icon}
+            </div>
+            <h4 class="font-extrabold text-base text-emerald-950 mt-2">${gm.badgeName}</h4>
+            <p class="text-xs text-emerald-700">${gm.title}</p>
+            <div class="mt-2 inline-block px-3 py-0.5 rounded-full text-xs font-extrabold ${earned ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-700'}">
+              ${earned ? 'UNLOCKED ✓' : `${done}/4 Missions`}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cert-missions-score').textContent = `${totalDone} / 16`;
+      document.getElementById('cert-xp-score').textContent = `${state.xp} XP`;
+      let rank = 'Cadet Sprout 🌱';
+      if (totalDone >= 16) rank = 'Master Botany Commander 🏅';
+      else if (totalDone >= 12) rank = 'Senior Flora Specialist 🌺';
+      else if (totalDone >= 6) rank = 'Pollination Ranger 🐝';
+      document.getElementById('cert-rank-title').textContent = rank;
+    }
+
+    /**************************************************************
+     * 9. ALL 16 INTERACTIVE MISSION WORKSPACES
+     **************************************************************/
+    function renderMissionWorkspace(missionId) {
+      const ws = document.getElementById('mission-workspace');
+
+      // ================= MISSION 1: Virtual Flower Dissection =================
+      if (missionId === 1) {
+        const labels = ['Stigma', 'Style', 'Ovary', 'Ovule', 'Anther', 'Filament'];
+        const allPlaced = labels.every(l => state.m1Placed[l] === l);
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-pink-100 text-pink-800 px-2.5 py-0.5 rounded-full">Game 1 • Mission 1 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🌺 Virtual Flower Dissection (Label the Cross-Section)</h3>
+            </div>
+            <button onclick="state.m1Placed={}; state.m1SelectedLabel=null; renderMissionWorkspace(1)" class="text-xs font-bold text-emerald-700 underline">Reset Board</button>
+          </div>
+          <p class="text-xs sm:text-sm text-emerald-800 mb-4">
+            <strong>Instructions:</strong> Step 1: Click a label tag from the tray below. Step 2: Click its matching dashed slot on the flower diagram!
+          </p>
+
+          <div class="flex flex-wrap gap-2 justify-center bg-emerald-50 p-3 rounded-2xl border-2 border-emerald-300 mb-5">
+            ${labels.map(lbl => {
+              const isUsed = state.m1Placed[lbl] === lbl;
+              const isSelected = state.m1SelectedLabel === lbl;
+              return `
+                <button ${isUsed ? 'disabled' : ''} onclick="m1SelectLabel('${lbl}')"
+                  class="px-4 py-2 rounded-xl font-extrabold text-sm border-2 transition ${
+                    isUsed ? 'bg-gray-200 text-gray-400 border-gray-300 line-through' :
+                    isSelected ? 'bg-amber-400 text-amber-950 border-amber-900 scale-105 shadow' :
+                    'bg-white text-emerald-950 border-emerald-600 hover:bg-emerald-100'
+                  }">
+                  🏷️ ${lbl}
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-gradient-to-b from-sky-50 to-green-50 p-4 rounded-2xl border-2 border-emerald-300">
+            <div class="space-y-4">
+              <div class="text-xs font-extrabold uppercase text-amber-800 text-center">♂ Stamen Structures</div>
+              ${['Anther', 'Filament'].map(slot => {
+                const filled = state.m1Placed[slot];
+                return `
+                  <div onclick="m1ClickSlot('${slot}')" class="cursor-pointer p-3 rounded-xl border-3 border-dashed transition text-center ${filled ? 'bg-green-100 border-green-600 text-green-900 font-extrabold' : 'bg-white/90 border-amber-500 hover:bg-amber-50 text-amber-800 font-bold'}">
+                    <div class="text-[11px] opacity-75">${slot === 'Anther' ? 'Yellow bilobed pollen sac at top of stamen' : 'Slender stalk supporting the anther'}</div>
+                    <div class="text-base mt-1">${filled ? '✅ ' + filled : '➕ Click to Place Label'}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="flex justify-center">
+              <svg viewBox="0 0 240 240" class="w-48 h-48">
+                <path d="M120 150 C40 140, 20 50, 75 30 C105 18, 115 80, 120 130 Z" fill="#f43f5e" stroke="#881337" stroke-width="3"/>
+                <path d="M120 150 C200 140, 220 50, 165 30 C135 18, 125 80, 120 130 Z" fill="#fb7185" stroke="#881337" stroke-width="3"/>
+                <path d="M95 165 Q75 110 72 70" stroke="#fde047" stroke-width="4" fill="none"/>
+                <path d="M145 165 Q165 110 168 70" stroke="#fde047" stroke-width="4" fill="none"/>
+                <ellipse cx="72" cy="68" rx="10" ry="6" fill="#facc15" stroke="#854d0e" stroke-width="2.5"/>
+                <ellipse cx="168" cy="68" rx="10" ry="6" fill="#facc15" stroke="#854d0e" stroke-width="2.5"/>
+                <ellipse cx="120" cy="165" rx="26" ry="30" fill="#86efac" stroke="#14532d" stroke-width="3"/>
+                <rect x="114" y="55" width="12" height="85" rx="5" fill="#4ade80" stroke="#14532d" stroke-width="2.5"/>
+                <circle cx="120" cy="50" r="10" fill="#e11d48" stroke="#881337" stroke-width="2.5"/>
+                <circle cx="113" cy="160" r="5" fill="#fef08a" stroke="#15803d" stroke-width="2"/>
+                <circle cx="127" cy="160" r="5" fill="#fef08a" stroke="#15803d" stroke-width="2"/>
+                <circle cx="113" cy="174" r="5" fill="#fef08a" stroke="#15803d" stroke-width="2"/>
+                <circle cx="127" cy="174" r="5" fill="#fef08a" stroke="#15803d" stroke-width="2"/>
+              </svg>
+            </div>
+
+            <div class="space-y-3">
+              <div class="text-xs font-extrabold uppercase text-pink-800 text-center">♀ Carpel Structures</div>
+              ${[
+                { s: 'Stigma', hint: 'Sticky top surface that traps pollen' },
+                { s: 'Style', hint: 'Slender tube connecting stigma to ovary' },
+                { s: 'Ovary', hint: 'Swollen base that becomes the fruit' },
+                { s: 'Ovule', hint: 'Inner structure containing embryo sac' }
+              ].map(item => {
+                const filled = state.m1Placed[item.s];
+                return `
+                  <div onclick="m1ClickSlot('${item.s}')" class="cursor-pointer p-2.5 rounded-xl border-3 border-dashed transition text-center ${filled ? 'bg-green-100 border-green-600 text-green-900 font-extrabold' : 'bg-white/90 border-pink-400 hover:bg-pink-50 text-pink-900 font-bold'}">
+                    <div class="text-[11px] opacity-75">${item.hint}</div>
+                    <div class="text-sm mt-0.5">${filled ? '✅ ' + filled : '➕ Click to Place Label'}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          ${allPlaced ? `
+            <div class="mt-5 text-center">
+              <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                🎉 Mission 1 Complete! Proceed to Mission 2 →
+              </button>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // ================= MISSION 2: Organ Sorter Challenge =================
+      else if (missionId === 2) {
+        const parts = [
+          { name: 'Anther', group: 'Stamen (Male)' },
+          { name: 'Filament', group: 'Stamen (Male)' },
+          { name: 'Stigma', group: 'Carpel (Female)' },
+          { name: 'Style', group: 'Carpel (Female)' },
+          { name: 'Ovary', group: 'Carpel (Female)' },
+          { name: 'Ovule', group: 'Carpel (Female)' },
+          { name: 'Petal', group: 'Non-Reproductive' },
+          { name: 'Sepal', group: 'Non-Reproductive' }
+        ];
+        const doneCount = Object.keys(state.m2Placed).length;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-pink-100 text-pink-800 px-2.5 py-0.5 rounded-full">Game 1 • Mission 2 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🧺 Floral Organ Sorter Challenge (${doneCount}/8 Sorted)</h3>
+            </div>
+            <button onclick="state.m2Placed={}; renderMissionWorkspace(2)" class="text-xs font-bold text-emerald-700 underline">Reset</button>
+          </div>
+          <p class="text-xs sm:text-sm text-emerald-800 mb-4">
+            <strong>Instructions:</strong> Classify each floral structure below into <strong>♂ Stamen (Male)</strong>, <strong>♀ Carpel (Female)</strong>, or <strong>🌿 Non-Reproductive</strong>!
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            ${parts.map(p => {
+              const solved = state.m2Placed[p.name];
+              return `
+                <div class="p-3.5 rounded-2xl border-2 ${solved ? 'bg-green-50 border-green-500' : 'bg-white border-emerald-300'} flex flex-col sm:flex-row items-center justify-between gap-2">
+                  <div class="font-extrabold text-base text-emerald-950">🌸 ${p.name}</div>
+                  ${solved ? `
+                    <span class="text-xs font-extrabold bg-green-600 text-white px-3 py-1 rounded-full">✅ ${p.group}</span>
+                  ` : `
+                    <div class="flex gap-1.5">
+                      <button onclick="m2Sort('${p.name}', 'Stamen (Male)', '${p.group}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400">♂ Stamen</button>
+                      <button onclick="m2Sort('${p.name}', 'Carpel (Female)', '${p.group}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-pink-100 hover:bg-pink-200 text-pink-900 border border-pink-400">♀ Carpel</button>
+                      <button onclick="m2Sort('${p.name}', 'Non-Reproductive', '${p.group}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-400">🌿 Non-Repro</button>
+                    </div>
+                  `}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          ${doneCount === 8 ? `
+            <div class="mt-5 text-center">
+              <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                🎉 Mission 2 Complete! Proceed to Mission 3 →
+              </button>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // ================= MISSION 3: Function Matcher =================
+      else if (missionId === 3) {
+        const pairs = [
+          { part: 'Anther', func: 'Contains pollen sacs where pollen grains are produced' },
+          { part: 'Stigma', func: 'Sticky surface that secretes sugary solution to trap pollen' },
+          { part: 'Ovary', func: 'Swollen carpel base that protects ovules & becomes the fruit' },
+          { part: 'Petal', func: 'Brightly colored modified leaf that attracts insect pollinators' },
+          { part: 'Sepal', func: 'Green outer leaf that protects the flower at the bud stage' }
+        ];
+        const matchedCount = Object.keys(state.m3Matched).length;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-pink-100 text-pink-800 px-2.5 py-0.5 rounded-full">Game 1 • Mission 3 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🔗 Floral Function Matcher (${matchedCount}/5 Matched)</h3>
+            </div>
+            <button onclick="state.m3Matched={}; state.m3SelectedLeft=null; renderMissionWorkspace(3)" class="text-xs font-bold text-emerald-700 underline">Reset</button>
+          </div>
+          <p class="text-xs sm:text-sm text-emerald-800 mb-4">
+            <strong>Instructions:</strong> Click a <strong>Floral Structure</strong> on the left, then click its matching <strong>Biological Function</strong> on the right!
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2.5">
+              ${pairs.map(p => {
+                const done = state.m3Matched[p.part];
+                const selected = state.m3SelectedLeft === p.part;
+                return `
+                  <button ${done ? 'disabled' : ''} onclick="state.m3SelectedLeft='${p.part}'; playSfx('click'); renderMissionWorkspace(3);"
+                    class="w-full p-3.5 rounded-xl border-2 text-left font-extrabold text-sm transition ${
+                      done ? 'bg-green-100 border-green-500 text-green-900' :
+                      selected ? 'bg-amber-300 border-amber-800 text-amber-950 scale-[1.02]' :
+                      'bg-white border-emerald-400 hover:bg-emerald-50'
+                    }">
+                    🌺 ${p.part} ${done ? '✅' : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="space-y-2.5">
+              ${[pairs[2], pairs[0], pairs[4], pairs[1], pairs[3]].map(p => {
+                const done = state.m3Matched[p.part];
+                return `
+                  <button ${done ? 'disabled' : ''} onclick="m3CheckMatch('${p.part}')"
+                    class="w-full p-3.5 rounded-xl border-2 text-left text-xs sm:text-sm font-bold transition ${
+                      done ? 'bg-green-100 border-green-500 text-green-900' :
+                      'bg-sky-50 border-sky-400 hover:bg-sky-100 text-sky-950'
+                    }">
+                    ${done ? `✅ <strong>${p.part}:</strong> ` : '🎯 '}${p.func}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          ${matchedCount === 5 ? `
+            <div class="mt-5 text-center">
+              <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                🎉 Mission 3 Complete! Proceed to Mission 4 →
+              </button>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // ================= MISSION 4: Flora Scanner HOTS Quiz =================
+      else if (missionId === 4) {
+        const questions = [
+          {
+            q: "1. A farmer accidentally removes all the anthers from a young papaya flower bud, but leaves the carpel intact. Which process can STILL occur in this flower?",
+            options: [
+              "Self-pollination from the same flower",
+              "Cross-pollination if pollen from another papaya plant lands on its stigma",
+              "Production of pollen grains inside the filament"
+            ],
+            ans: 1,
+            exp: "Even without anthers, the female carpel (stigma, style, ovary, ovule) is intact, so it can still receive pollen from another flower via cross-pollination!"
+          },
+          {
+            q: "2. Why do wind-pollinated flowers (such as maize/grass) have long filaments with large anthers hanging outside the flower?",
+            options: [
+              "To attract nocturnal insects with bright colors",
+              "To expose the anthers to wind currents so light pollen grains are easily blown away",
+              "To prevent rain from washing away sugary nectar"
+            ],
+            ans: 1,
+            exp: "Wind-pollinated flowers have versatile anthers on long filaments exposed outside the flower so wind can easily carry the abundant, light pollen grains."
+          },
+          {
+            q: "3. Which structure of a bisexual flower contains haploid (n) cells after meiosis is completed?",
+            options: [
+              "Sepal and Petal",
+              "Pollen grain (in anther) and Embryo sac (in ovule)",
+              "Filament and Style"
+            ],
+            ans: 1,
+            exp: "Both pollen grains and the embryo sac are produced via meiosis followed by mitosis, so their nuclei are haploid (n)!"
+          }
+        ];
+        renderQuizMission(4, 'Game 1 • Mission 4 of 4', '🔍 Flora Scanner HOTS Quiz', questions);
+      }
+
+      // ================= MISSION 5: The Pollen Factory Simulator =================
+      else if (missionId === 5) {
+        const steps = [
+          {
+            stage: "Stage 1: Inside the Anther's Pollen Sac",
+            prompt: "We start with a diploid Pollen Mother Cell / Microspore Mother Cell (2n). Which cell division must you trigger FIRST to halve the chromosome number?",
+            btnCorrect: "Trigger MEIOSIS (2n ➔ 4 Haploid Microspores n)",
+            btnWrong: "Trigger MITOSIS (Keep 2n Diploid)",
+            feedback: "Spot on! Diploid microspore mother cells (2n) undergo MEIOSIS I & II to form a tetrad of 4 haploid microspores (n)."
+          },
+          {
+            stage: "Stage 2: Tetrad of 4 Haploid Microspores (n)",
+            prompt: "The 4 haploid microspores (n) have separated. How does the single haploid nucleus inside each microspore form a mature pollen grain with 2 nuclei?",
+            btnCorrect: "Trigger MITOSIS (1 Haploid Nucleus ➔ 2 Haploid Nuclei)",
+            btnWrong: "Trigger a 2nd MEIOSIS",
+            feedback: "Excellent! Each haploid microspore nucleus undergoes MITOSIS once to produce two haploid nuclei: the Tube Nucleus (n) and Generative Nucleus (n)."
+          },
+          {
+            stage: "Stage 3: Quality Check on the 2 Pollen Nuclei",
+            prompt: "Final step! Assign the correct biological roles to the Tube Nucleus and Generative Nucleus inside our mature pollen grain:",
+            btnCorrect: "Tube Nucleus forms pollen tube; Generative Nucleus divides into 2 male gametes",
+            btnWrong: "Tube Nucleus fuses with egg; Generative Nucleus becomes the seed coat",
+            feedback: "Pollen Factory Mission Complete! You mastered the 2n -> Meiosis (tetrad n) -> 1x Mitosis (Tube + Generative nuclei) pathway!"
+          }
+        ];
+        const curStep = state.m5Step;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">Game 2 • Mission 1 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🏭 The Pollen Factory Simulator (Step ${Math.min(curStep + 1, 3)}/3)</h3>
+            </div>
+            <button onclick="state.m5Step=0; renderMissionWorkspace(5)" class="text-xs font-bold text-emerald-700 underline">Restart Lab</button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mb-5 text-center text-xs font-extrabold">
+            <div class="p-3 rounded-xl border-2 ${curStep >= 1 ? 'bg-green-100 border-green-500 text-green-900' : 'bg-amber-50 border-amber-400'}">
+              1. Microspore Mother Cell (2n)<br/><span class="text-[11px]">${curStep >= 1 ? '✅ Meiosis Done' : '⏳ Awaiting Meiosis'}</span>
+            </div>
+            <div class="p-3 rounded-xl border-2 ${curStep >= 2 ? 'bg-green-100 border-green-500 text-green-900' : 'bg-amber-50 border-amber-400'}">
+              2. Tetrad of 4 Microspores (n)<br/><span class="text-[11px]">${curStep >= 2 ? '✅ 1x Mitosis Done' : '⏳ Awaiting Mitosis'}</span>
+            </div>
+            <div class="p-3 rounded-xl border-2 ${curStep >= 3 ? 'bg-green-100 border-green-500 text-green-900' : 'bg-amber-50 border-amber-400'}">
+              3. Mature Pollen Grain (n)<br/><span class="text-[11px]">${curStep >= 3 ? '✅ 2 Nuclei Verified' : '⏳ Tube + Generative'}</span>
+            </div>
+          </div>
+
+          ${curStep < 3 ? `
+            <div class="bg-purple-50 border-3 border-purple-300 rounded-2xl p-5 text-center">
+              <span class="text-xs font-extrabold bg-purple-800 text-white px-3 py-1 rounded-full">${steps[curStep].stage}</span>
+              <p class="font-bold text-base text-emerald-950 my-4 max-w-xl mx-auto">${steps[curStep].prompt}</p>
+              <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <button onclick="m5Advance(true, '${steps[curStep].feedback}')" class="btn-leaf px-5 py-3 rounded-xl font-extrabold text-sm">
+                  ⚡ ${steps[curStep].btnCorrect}
+                </button>
+                <button onclick="m5Advance(false)" class="bg-rose-100 hover:bg-rose-200 text-rose-900 border-2 border-rose-400 px-5 py-3 rounded-xl font-extrabold text-sm">
+                  ❌ ${steps[curStep].btnWrong}
+                </button>
+              </div>
+            </div>
+          ` : `
+            <div class="bg-green-50 border-3 border-green-500 rounded-2xl p-6 text-center">
+              <div class="text-4xl mb-2">🌼🔬✅</div>
+              <h4 class="text-xl font-extrabold text-green-950">Pollen Grain Production Verified!</h4>
+              <p class="text-sm text-green-800 mt-1">Diploid Mother Cell (2n) ➔ Meiosis (4 Haploid Microspores n) ➔ 1x Mitosis (Tube Nucleus + Generative Nucleus).</p>
+              <button onclick="goToNextMission()" class="btn-wood mt-4 px-6 py-3 rounded-xl font-extrabold text-sm">
+                Proceed to Mission 6 (Embryo Sac Architect) →
+              </button>
+            </div>
+          `}
+        `;
+      }
+
+      // ================= MISSION 6: Embryo Sac 3x Mitosis Architect =================
+      else if (missionId === 6) {
+        const nucleiCount = Math.pow(2, state.m6MitosisCount);
+        const allRegionsPlaced = state.m6PlacedRegions.top && state.m6PlacedRegions.center && state.m6PlacedRegions.bottom;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">Game 2 • Mission 2 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🧬 Embryo Sac Architect (3x Mitosis = 8 Nuclei across 7 Cells)</h3>
+            </div>
+            <button onclick="state.m6MitosisCount=0; state.m6PlacedRegions={top:false,center:false,bottom:false}; renderMissionWorkspace(6)" class="text-xs font-bold text-emerald-700 underline">Reset Lab</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <div class="bg-pink-50 border-3 border-pink-300 rounded-2xl p-5 text-center">
+              <span class="text-xs font-extrabold bg-pink-700 text-white px-3 py-1 rounded-full">PART 1: MITOTIC DIVISION</span>
+              <p class="text-xs sm:text-sm text-pink-950 mt-2">
+                After meiosis in the ovule, 3 megaspores degenerate and <strong>1 haploid megaspore (n)</strong> survives. Click the button <strong>3 times</strong> to divide it by mitosis!
+              </p>
+
+              <div class="my-4 p-4 bg-white rounded-2xl border-2 border-pink-400">
+                <div class="text-xs font-bold text-pink-700">MITOSIS COUNT: ${state.m6MitosisCount} / 3</div>
+                <div class="text-2xl font-extrabold text-emerald-950 mt-1">${nucleiCount} Haploid Nuclei (n)</div>
+                <div class="flex justify-center gap-1.5 mt-2 text-xl">
+                  ${'🟣'.repeat(nucleiCount)}
+                </div>
+              </div>
+
+              ${state.m6MitosisCount < 3 ? `
+                <button onclick="m6TriggerMitosis()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                  ⚡ Trigger Mitosis #${state.m6MitosisCount + 1} (${nucleiCount} ➔ ${nucleiCount * 2} Nuclei)
+                </button>
+              ` : `
+                <div class="text-xs font-extrabold text-green-800 bg-green-100 p-2 rounded-xl border border-green-400">
+                  ✅ 3x Mitosis Complete! Now position the 8 nuclei inside the Ovule on the right!
+                </div>
+              `}
+            </div>
+
+            <div class="bg-emerald-50 border-3 border-emerald-400 rounded-2xl p-5 text-center">
+              <span class="text-xs font-extrabold bg-emerald-800 text-white px-3 py-1 rounded-full">PART 2: OVULE CELL ORGANIZER</span>
+              <p class="text-xs text-emerald-800 mt-2 mb-3">Click each region of the Embryo Sac (enabled after 3x Mitosis) to arrange the 8 nuclei:</p>
+
+              <div class="max-w-xs mx-auto bg-white border-4 border-emerald-700 rounded-full py-5 px-4 space-y-3 shadow-inner">
+                <button ${state.m6MitosisCount < 3 ? 'disabled' : ''} onclick="m6PlaceRegion('top')"
+                  class="w-full p-2.5 rounded-xl border-2 text-xs font-extrabold transition ${state.m6PlacedRegions.top ? 'bg-green-100 border-green-600 text-green-900' : 'bg-purple-50 border-purple-400 hover:bg-purple-100 text-purple-900'}">
+                  ${state.m6PlacedRegions.top ? '✅ 3 Antipodal Cells (n)' : '➕ Click to Place Top Pole (3 Antipodal Cells)'}
+                </button>
+
+                <button ${state.m6MitosisCount < 3 ? 'disabled' : ''} onclick="m6PlaceRegion('center')"
+                  class="w-full p-3 rounded-xl border-2 text-xs font-extrabold transition ${state.m6PlacedRegions.center ? 'bg-green-100 border-green-600 text-green-900' : 'bg-amber-50 border-amber-400 hover:bg-amber-100 text-amber-900'}">
+                  ${state.m6PlacedRegions.center ? '✅ 2 Polar Nuclei (n + n)' : '➕ Click to Place Center (2 Polar Nuclei)'}
+                </button>
+
+                <button ${state.m6MitosisCount < 3 ? 'disabled' : ''} onclick="m6PlaceRegion('bottom')"
+                  class="w-full p-2.5 rounded-xl border-2 text-xs font-extrabold transition ${state.m6PlacedRegions.bottom ? 'bg-green-100 border-green-600 text-green-900' : 'bg-pink-50 border-pink-400 hover:bg-pink-100 text-pink-900'}">
+                  ${state.m6PlacedRegions.bottom ? '✅ 1 Egg Cell + 2 Synergid Cells' : '➕ Click to Place Micropyle End (1 Egg + 2 Synergids)'}
+                </button>
+                <div class="text-[11px] font-extrabold text-emerald-800">⬆️ MICROPYLE OPENING ⬆️</div>
+              </div>
+            </div>
+          </div>
+
+          ${allRegionsPlaced ? `
+            <div class="mt-5 text-center">
+              <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                🎉 Mission 6 Complete! Proceed to Mission 7 →
+              </button>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // ================= MISSION 7: Cell Division Detective =================
+      else if (missionId === 7) {
+        const cases = [
+          {
+            id: 'c1',
+            flawed: 'Flawed Lab Note #1: "In the anther, a diploid microspore mother cell (2n) divides by MITOSIS to produce a tetrad of 4 haploid microspores (n)."',
+            fixBtn: 'Correction: Change MITOSIS to MEIOSIS (halves 2n to n)',
+            wrongBtn: 'Correction: Change 4 microspores to 8 microspores',
+            exp: 'Correct! Producing haploid microspores (n) from a diploid mother cell (2n) requires MEIOSIS, not mitosis.'
+          },
+          {
+            id: 'c2',
+            flawed: 'Flawed Lab Note #2: "In the ovule, all 4 haploid megaspores survive and each divides once by mitosis to make 8 nuclei."',
+            fixBtn: 'Correction: 3 megaspores degenerate; 1 surviving megaspore undergoes 3x mitosis',
+            wrongBtn: 'Correction: All 4 megaspores fuse together into a tetraploid cell',
+            exp: 'Spot on! Three megaspores degenerate, and only 1 functional megaspore divides by mitosis 3 times (1 -> 2 -> 4 -> 8 nuclei).'
+          },
+          {
+            id: 'c3',
+            flawed: 'Flawed Lab Note #3: "The two synergid cells in the embryo sac fuse with the male gamete to form the diploid zygote."',
+            fixBtn: 'Correction: The EGG CELL fuses with the male gamete; synergids guide the pollen tube',
+            wrongBtn: 'Correction: The antipodal cells form the diploid zygote',
+            exp: 'Awesome detective work! The Egg Cell is the female gamete that forms the diploid zygote (2n).'
+          }
+        ];
+        const fixedCount = Object.keys(state.m7Fixed).length;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">Game 2 • Mission 3 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🕵️‍♂️ Cell Division Detective: Spot & Fix the Error (${fixedCount}/3 Fixed)</h3>
+            </div>
+            <button onclick="state.m7Fixed={}; renderMissionWorkspace(7)" class="text-xs font-bold text-emerald-700 underline">Reset</button>
+          </div>
+
+          <div class="space-y-4">
+            ${cases.map(c => {
+              const isFixed = state.m7Fixed[c.id];
+              return `
+                <div class="p-4 rounded-2xl border-2 ${isFixed ? 'bg-green-50 border-green-500' : 'bg-amber-50 border-amber-400'}">
+                  <p class="font-extrabold text-sm text-emerald-950">${c.flawed}</p>
+                  ${isFixed ? `
+                    <div class="mt-2 text-xs font-extrabold text-green-800 bg-white px-3 py-2 rounded-xl border border-green-300">
+                      ✅ FIXED: ${c.exp}
+                    </div>
+                  ` : `
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button onclick="m7Fix('${c.id}', true, '${c.exp}')" class="btn-leaf px-3.5 py-2 rounded-xl text-xs font-extrabold">🔧 ${c.fixBtn}</button>
+                      <button onclick="m7Fix('${c.id}', false)" class="bg-white hover:bg-rose-50 text-emerald-950 border-2 border-emerald-300 px-3.5 py-2 rounded-xl text-xs font-bold">🔧 ${c.wrongBtn}</button>
+                    </div>
+                  `}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          ${fixedCount === 3 ? `
+            <div class="mt-5 text-center">
+              <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                🎉 Mission 7 Complete! Proceed to Mission 8 →
+              </button>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // ================= MISSION 8: Gamete Comparison Matrix =================
+      else if (missionId === 8) {
+        const questions = [
+          {
+            q: "1. Compare the number of mitotic divisions after meiosis in Pollen Grain formation vs Embryo Sac formation:",
+            options: [
+              "Pollen Grain: 1x Mitosis | Embryo Sac: 3x Mitosis",
+              "Pollen Grain: 3x Mitosis | Embryo Sac: 1x Mitosis",
+              "Both undergo 2x Mitosis"
+            ],
+            ans: 0,
+            exp: "Each haploid microspore undergoes 1x mitosis (forming 2 nuclei), whereas the surviving haploid megaspore undergoes 3x mitosis (forming 8 nuclei)."
+          },
+          {
+            q: "2. How many functional reproductive structures are formed from ONE diploid mother cell (2n) in the Anther vs in the Ovule?",
+            options: [
+              "Anther: 1 pollen grain | Ovule: 4 embryo sacs",
+              "Anther: 4 pollen grains (all 4 microspores survive) | Ovule: 1 embryo sac (3 of 4 megaspores degenerate)",
+              "Anther: 8 pollen grains | Ovule: 8 embryo sacs"
+            ],
+            ans: 1,
+            exp: "In the anther, all 4 microspores in the tetrad develop into pollen grains. In the ovule, 3 megaspores degenerate so only 1 embryo sac forms!"
+          },
+          {
+            q: "3. What is the ploidy level of a mature pollen grain's Generative Nucleus and the Embryo Sac's Egg Cell?",
+            options: [
+              "Both are Diploid (2n)",
+              "Both are Haploid (n)",
+              "Generative nucleus is Triploid (3n) and Egg cell is Haploid (n)"
+            ],
+            ans: 1,
+            exp: "Both structures are produced after meiosis reduces the chromosome number from 2n to n, so all their nuclei are haploid (n)."
+          }
+        ];
+        renderQuizMission(8, 'Game 2 • Mission 4 of 4', '📊 Gamete Comparison Matrix Challenge', questions);
+      }
+
+      // ================= MISSION 9: Pollination Agent Dispatch =================
+      else if (missionId === 9) {
+        const questions = [
+          {
+            q: "1. Profile A: Large, brightly colored red petals, sweet nectar at the base, and sticky, spiky pollen grains. Which pollination agent should you dispatch?",
+            options: [
+              "Insects / Bees (Entomophily)",
+              "Wind Currents (Anemophily)",
+              "Water Currents"
+            ],
+            ans: 0,
+            exp: "Bright petals, fragrance, nectar, and sticky pollen grains are classic adaptations for insect pollination!"
+          },
+          {
+            q: "2. Profile B (Maize / Lalang Grass): Small dull green flowers, no nectar, feathery exposed stigma, and huge quantities of tiny smooth, light pollen grains. Select the pollination agent:",
+            options: [
+              "Butterflies",
+              "Wind (Anemophily)",
+              "Fruit Bats"
+            ],
+            ans: 1,
+            exp: "Light, smooth pollen in large quantities and feathery stigmas hanging outside the flower are adaptations for wind pollination."
+          },
+          {
+            q: "3. Where does a pollen grain germinate immediately after successful pollination?",
+            options: [
+              "Inside the filament",
+              "On the sticky stigma, stimulated by its sugary solution",
+              "Inside the antipodal cells"
+            ],
+            ans: 1,
+            exp: "Sugary solution secreted by the stigma stimulates the pollen grain to germinate and grow a pollen tube!"
+          }
+        ];
+        renderQuizMission(9, 'Game 3 • Mission 1 of 4', '🐝 Pollination Agent Dispatch', questions);
+      }
+
+      // ================= MISSION 10: Pollen Tube Navigator =================
+      else if (missionId === 10) {
+        const checkpoints = [
+          {
+            title: "Checkpoint 1: Germination on the Stigma",
+            question: "The pollen grain has landed on the sticky stigma. Which nucleus sits at the tip of the growing pollen tube and secretes enzymes to digest the style tissues?",
+            correct: "The Tube Nucleus (n)",
+            wrong: "The Antipodal Nucleus (n)",
+            feedback: "Correct! The Tube Nucleus leads the way and controls the growth of the pollen tube down the style."
+          },
+          {
+            title: "Checkpoint 2: Mid-Style Mitosis Event!",
+            question: "As the pollen tube drills down the style, what happens to the Generative Nucleus (n) trailing behind the tube nucleus?",
+            correct: "It divides by MITOSIS to form 2 haploid Male Gametes (n + n)",
+            wrong: "It divides by MEIOSIS to form 4 spores",
+            feedback: "Awesome! The Generative Nucleus (n) undergoes mitosis inside the pollen tube to produce 2 haploid male gametes!"
+          },
+          {
+            title: "Checkpoint 3: Entering the Ovule!",
+            question: "The pollen tube has reached the base of the ovary! Through which specific opening in the integuments does the pollen tube enter the ovule?",
+            correct: "Through the MICROPYLE (then the tube nucleus degenerates)",
+            wrong: "Through the Sepal Calyx",
+            feedback: "Pollen Tube Navigation Complete! The pollen tube enters through the micropyle, the tube nucleus degenerates, and the 2 male gametes enter the embryo sac!"
+          }
+        ];
+        const step = state.m10Step;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">Game 3 • Mission 2 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🧭 Pollen Tube Navigator (Checkpoint ${Math.min(step + 1, 3)}/3)</h3>
+            </div>
+            <button onclick="state.m10Step=0; renderMissionWorkspace(10)" class="text-xs font-bold text-emerald-700 underline">Restart Navigation</button>
+          </div>
+
+          <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-300 mb-5">
+            <div class="flex justify-between text-xs font-extrabold text-emerald-900 mb-1">
+              <span>🌺 Stigma</span>
+              <span>🌿 Style (Generative Mitosis)</span>
+              <span>🚪 Micropyle & Embryo Sac</span>
+            </div>
+            <div class="w-full h-5 bg-white rounded-full border-2 border-emerald-600 overflow-hidden p-0.5">
+              <div class="h-full bg-gradient-to-r from-yellow-400 via-amber-500 to-green-500 rounded-full transition-all duration-500" style="width: ${Math.min((step / 3) * 100 + 15, 100)}%"></div>
+            </div>
+          </div>
+
+          ${step < 3 ? `
+            <div class="bg-amber-50 border-3 border-amber-400 rounded-2xl p-5 text-center">
+              <span class="text-xs font-extrabold bg-amber-800 text-white px-3 py-1 rounded-full">${checkpoints[step].title}</span>
+              <p class="font-bold text-base text-emerald-950 my-4 max-w-xl mx-auto">${checkpoints[step].question}</p>
+              <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <button onclick="m10Advance(true, '${checkpoints[step].feedback}')" class="btn-leaf px-5 py-3 rounded-xl font-extrabold text-sm">
+                  ✅ ${checkpoints[step].correct}
+                </button>
+                <button onclick="m10Advance(false)" class="bg-rose-100 hover:bg-rose-200 text-rose-900 border-2 border-rose-400 px-5 py-3 rounded-xl font-extrabold text-sm">
+                  ❌ ${checkpoints[step].wrong}
+                </button>
+              </div>
+            </div>
+          ` : `
+            <div class="bg-green-50 border-3 border-green-500 rounded-2xl p-6 text-center">
+              <div class="text-4xl mb-2">🎯🧬🚪</div>
+              <h4 class="text-xl font-extrabold text-green-950">Pollen Tube Reached the Embryo Sac!</h4>
+              <p class="text-sm text-green-800 mt-1">Both haploid Male Gametes (n) are now inside the embryo sac, ready for Double Fertilization in Mission 11!</p>
+              <button onclick="goToNextMission()" class="btn-wood mt-4 px-6 py-3 rounded-xl font-extrabold text-sm">
+                Proceed to Mission 11 (Double Fertilization Lab) →
+              </button>
+            </div>
+          `}
+        `;
+      }
+
+      // ================= MISSION 11: Double Fertilization Fusion Lab =================
+      else if (missionId === 11) {
+        const f = state.m11Fusions;
+        const allDone = f.zygote && f.endosperm && f.ploidyVerified;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">Game 3 • Mission 3 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">⚡ Double Fertilization Fusion Simulator</h3>
+            </div>
+            <button onclick="state.m11Fusions={zygote:false,endosperm:false,ploidyVerified:false}; renderMissionWorkspace(11)" class="text-xs font-bold text-emerald-700 underline">Reset Lab</button>
+          </div>
+          <p class="text-xs sm:text-sm text-emerald-800 mb-4">
+            <strong>Instructions:</strong> Execute both fusion events inside the embryo sac, then verify the chromosome ploidy math!
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+            <div class="p-5 rounded-2xl border-3 ${f.zygote ? 'bg-green-50 border-green-500' : 'bg-pink-50 border-pink-400'} text-center">
+              <span class="text-xs font-extrabold uppercase bg-pink-700 text-white px-3 py-1 rounded-full">FUSION EVENT #1</span>
+              <h4 class="font-extrabold text-lg text-emerald-950 mt-2">Male Gamete 1 (n) + Egg Cell (n)</h4>
+              <div class="my-3 text-2xl">🧬 (n) + 🥚 (n) ➔ ❓</div>
+              ${f.zygote ? `
+                <div class="p-3 bg-white rounded-xl border-2 border-green-500 font-extrabold text-green-900 text-sm">
+                  🌱 Forms DIPLOID ZYGOTE (2n) ✓<br/><span class="text-xs font-normal">(Develops into the Embryo)</span>
+                </div>
+              ` : `
+                <button onclick="m11Fuse('zygote')" class="btn-leaf px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm">
+                  ⚡ Fuse to Form Diploid Zygote (2n)
+                </button>
+              `}
+            </div>
+
+            <div class="p-5 rounded-2xl border-3 ${f.endosperm ? 'bg-green-50 border-green-500' : 'bg-amber-50 border-amber-400'} text-center">
+              <span class="text-xs font-extrabold uppercase bg-amber-700 text-white px-3 py-1 rounded-full">FUSION EVENT #2</span>
+              <h4 class="font-extrabold text-lg text-emerald-950 mt-2">Male Gamete 2 (n) + 2 Polar Nuclei (n + n)</h4>
+              <div class="my-3 text-2xl">🧬 (n) + 🟣🟣 (2n) ➔ ❓</div>
+              ${f.endosperm ? `
+                <div class="p-3 bg-white rounded-xl border-2 border-green-500 font-extrabold text-green-900 text-sm">
+                  🌽 Forms TRIPLOID ENDOSPERM NUCLEUS (3n) ✓<br/><span class="text-xs font-normal">(Develops into food-storing Endosperm Tissue)</span>
+                </div>
+              ` : `
+                <button onclick="m11Fuse('endosperm')" class="btn-wood px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm">
+                  ⚡ Fuse to Form Triploid Endosperm Nucleus (3n)
+                </button>
+              `}
+            </div>
+          </div>
+
+          ${(f.zygote && f.endosperm) ? `
+            <div class="p-4 rounded-2xl border-2 ${f.ploidyVerified ? 'bg-green-100 border-green-600' : 'bg-sky-50 border-sky-400'} text-center">
+              <p class="font-extrabold text-sm text-emerald-950">
+                🧮 Quick Ploidy Check: If a flowering plant species has a diploid chromosome number of <strong>2n = 20</strong>, how many chromosomes are in its <strong>Triploid Endosperm Nucleus (3n)</strong>?
+              </p>
+              ${f.ploidyVerified ? `
+                <div class="mt-2 font-extrabold text-green-900 text-sm">✅ Correct! Since 2n = 20, haploid n = 10, so Triploid Endosperm (3n) = 30 chromosomes!</div>
+              ` : `
+                <div class="mt-3 flex justify-center gap-3">
+                  <button onclick="m11CheckMath(false)" class="bg-white border-2 border-sky-400 px-4 py-2 rounded-xl font-bold text-xs">10 chromosomes (n)</button>
+                  <button onclick="m11CheckMath(false)" class="bg-white border-2 border-sky-400 px-4 py-2 rounded-xl font-bold text-xs">20 chromosomes (2n)</button>
+                  <button onclick="m11CheckMath(true)" class="btn-leaf px-5 py-2 rounded-xl font-extrabold text-xs">30 chromosomes (3n)</button>
+                </div>
+              `}
+            </div>
+          ` : ''}
+
+          ${allDone ? `
+            <div class="mt-5 text-center">
+              <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                🎉 Mission 11 Complete! Proceed to Mission 12 →
+              </button>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // ================= MISSION 12: Plant Survival HOTS Challenge =================
+      else if (missionId === 12) {
+        const questions = [
+          {
+            q: "1. Why is Double Fertilization biologically important for the survival of flowering plants on land?",
+            options: [
+              "It ensures the nutritive endosperm tissue (3n) develops ONLY when the egg cell has been fertilized, preventing wasted nutrients",
+              "It turns all seeds into haploid spores",
+              "It allows flowers to photosynthesize underground"
+            ],
+            ans: 0,
+            exp: "Double fertilization guarantees that the plant invests energy into food-storing endosperm tissue ONLY if fertilization of the egg cell succeeds!"
+          },
+          {
+            q: "2. What happens to the 3 antipodal cells and 2 synergid cells after double fertilization is completed?",
+            options: [
+              "They fuse to become the fruit skin",
+              "They degenerate and disappear",
+              "They become new anthers"
+            ],
+            ans: 1,
+            exp: "Once double fertilization is complete, both the antipodal cells and synergid cells degenerate."
+          },
+          {
+            q: "3. Which hormone is stimulated by fertilization to cause the ovary to swell and develop into a fruit?",
+            options: [
+              "Insulin",
+              "Auxin (produced by developing seeds)",
+              "Adrenaline"
+            ],
+            ans: 1,
+            exp: "Developing seeds post-fertilization release auxin, which stimulates the ovary wall to grow and ripen into a fruit!"
+          }
+        ];
+        renderQuizMission(12, 'Game 3 • Mission 4 of 4', '🌱 Plant Survival HOTS Challenge', questions);
+      }
+
+      // ================= MISSION 13: Post-Fertilization Transformer =================
+      else if (missionId === 13) {
+        const items = [
+          { pre: 'Ovary', post: 'Fruit' },
+          { pre: 'Ovary Wall', post: 'Pericarp (Fruit Wall)' },
+          { pre: 'Ovule', post: 'Seed' },
+          { pre: 'Integument', post: 'Testa (Seed Coat)' },
+          { pre: 'Diploid Zygote (2n)', post: 'Embryo (Plumule, Radicle, Cotyledon)' },
+          { pre: 'Triploid Endosperm Nucleus (3n)', post: 'Endosperm Tissue (Food Store)' }
+        ];
+        const count = Object.keys(state.m13Matched).length;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">Game 4 • Mission 1 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🔄 Post-Fertilization Transformer (${count}/6 Transformed)</h3>
+            </div>
+            <button onclick="state.m13Matched={}; state.m13SelectedLeft=null; renderMissionWorkspace(13)" class="text-xs font-bold text-emerald-700 underline">Reset</button>
+          </div>
+          <p class="text-xs sm:text-sm text-emerald-800 mb-4">
+            <strong>Instructions:</strong> Click a <strong>Pre-Fertilization Flower Part</strong> on the left, then click what it transforms into <strong>After Fertilization</strong> on the right!
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              ${items.map(it => {
+                const done = state.m13Matched[it.pre];
+                const sel = state.m13SelectedLeft === it.pre;
+                return `
+                  <button ${done ? 'disabled' : ''} onclick="state.m13SelectedLeft='${it.pre}'; playSfx('click'); renderMissionWorkspace(13)"
+                    class="w-full p-3 rounded-xl border-2 text-left font-extrabold text-xs sm:text-sm transition ${
+                      done ? 'bg-green-100 border-green-500 text-green-900' :
+                      sel ? 'bg-amber-300 border-amber-800 text-amber-950 scale-[1.02]' :
+                      'bg-white border-emerald-400 hover:bg-emerald-50'
+                    }">
+                    🌸 ${it.pre} ${done ? '✅' : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="space-y-2">
+              ${[items[2], items[0], items[4], items[1], items[5], items[3]].map(it => {
+                const done = state.m13Matched[it.pre];
+                return `
+                  <button ${done ? 'disabled' : ''} onclick="m13Check('${it.pre}')"
+                    class="w-full p-3 rounded-xl border-2 text-left font-bold text-xs sm:text-sm transition ${
+                      done ? 'bg-green-100 border-green-500 text-green-900' :
+                      'bg-amber-50 border-amber-400 hover:bg-amber-100 text-amber-950'
+                    }">
+                    🍎 ➔ ${it.post} ${done ? `(${it.pre})` : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          ${count === 6 ? `
+            <div class="mt-5 text-center">
+              <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                🎉 Mission 13 Complete! Proceed to Mission 14 →
+              </button>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // ================= MISSION 14: Seed & Embryo Anatomy Lab =================
+      else if (missionId === 14) {
+        const questions = [
+          {
+            q: "1. During seed germination, which part of the embryo grows upwards to form the first shoot, and which part grows downwards to form the root?",
+            options: [
+              "Plumule grows into the shoot; Radicle grows into the root",
+              "Radicle grows into the shoot; Plumule grows into the root",
+              "Testa grows into the shoot; Micropyle grows into the root"
+            ],
+            ans: 0,
+            exp: "Memory trick: R-adicle = R-oot! P-lumule = Plant shoot!"
+          },
+          {
+            q: "2. What is the main difference between a Dicotyledon seed (e.g., broad bean) and a Monocotyledon seed (e.g., maize grain)?",
+            options: [
+              "Dicot seeds have 2 cotyledons; Monocot seeds have 1 cotyledon (scutellum) and a large endosperm",
+              "Dicot seeds have no embryo; Monocot seeds have 4 embryos",
+              "Monocot seeds do not come from ovules"
+            ],
+            ans: 0,
+            exp: "Dicotyledons have two food-storing cotyledons, whereas monocotyledons have one cotyledon and typically store food in the endosperm."
+          },
+          {
+            q: "3. Which tough outer layer of the seed protects the embryo from mechanical injury and dehydration?",
+            options: [
+              "Stigma",
+              "Testa (formed from the integument)",
+              "Filament"
+            ],
+            ans: 1,
+            exp: "The integument hardens after fertilization to become the tough protective seed coat called the testa!"
+          }
+        ];
+        renderQuizMission(14, 'Game 4 • Mission 2 of 4', '🌱 Embryo & Seed Anatomy Lab', questions);
+      }
+
+      // ================= MISSION 15: Fruit Market Classifier =================
+      else if (missionId === 15) {
+        const fruits = [
+          { name: '🥭 Mango / Pea', type: 'Simple Fruit', hint: '1 flower, 1 carpel' },
+          { name: '🍓 Raspberry / Nona', type: 'Aggregate Fruit', hint: '1 flower, many free carpels' },
+          { name: '🍍 Pineapple / Jackfruit', type: 'Multiple Fruit', hint: 'Cluster of many flowers (inflorescence)' },
+          { name: '🍎 Apple / Pear', type: 'Accessory Fruit', hint: 'Flesh develops from receptacle' }
+        ];
+        const doneCount = Object.keys(state.m15Placed).length;
+        ws.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-extrabold uppercase bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">Game 4 • Mission 3 of 4</span>
+              <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">🍍 Fruit Market Classifier (${doneCount}/4 Classified)</h3>
+            </div>
+            <button onclick="state.m15Placed={}; renderMissionWorkspace(15)" class="text-xs font-bold text-emerald-700 underline">Reset</button>
+          </div>
+          <p class="text-xs sm:text-sm text-emerald-800 mb-4">
+            <strong>Instructions:</strong> Classify each fruit crate into one of the 4 KSSM Fruit Categories based on how its flower developed!
+          </p>
+
+          <div class="space-y-3">
+            ${fruits.map(f => {
+              const solved = state.m15Placed[f.name];
+              return `
+                <div class="p-4 rounded-2xl border-2 ${solved ? 'bg-green-50 border-green-500' : 'bg-white border-emerald-300'} flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div>
+                    <div class="font-extrabold text-base text-emerald-950">${f.name}</div>
+                    <div class="text-xs text-emerald-700">Clue: ${f.hint}</div>
+                  </div>
+                  ${solved ? `
+                    <span class="text-xs font-extrabold bg-green-600 text-white px-3.5 py-1.5 rounded-full">✅ ${f.type}</span>
+                  ` : `
+                    <div class="flex flex-wrap gap-1.5">
+                      ${['Simple Fruit', 'Aggregate Fruit', 'Multiple Fruit', 'Accessory Fruit'].map(cat => `
+                        <button onclick="m15Sort('${f.name}', '${cat}', '${f.type}')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400">
+                          ${cat}
+                        </button>
+                      `).join('')}
+                    </div>
+                  `}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          ${doneCount === 4 ? `
+            <div class="mt-5 text-center">
+              <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+                🎉 Mission 15 Complete! Enter Final Boss Assessment (Mission 16) →
+              </button>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // ================= MISSION 16: Commander's Final Boss Assessment =================
+      else if (missionId === 16) {
+        const questions = [
+          {
+            q: "1. [6.1] Which pair correctly groups the male reproductive organ (Stamen) and female reproductive organ (Carpel)?",
+            options: [
+              "Stamen: Anther & Filament | Carpel: Stigma, Style, Ovary & Ovule",
+              "Stamen: Stigma & Style | Carpel: Anther & Petal",
+              "Stamen: Sepal & Petal | Carpel: Ovule & Pedicel"
+            ],
+            ans: 0,
+            exp: "Stamen = Anther + Filament (male); Carpel = Stigma + Style + Ovary + Ovule (female)."
+          },
+          {
+            q: "2. [6.2] How many cells and nuclei are present in a fully mature Embryo Sac inside the ovule?",
+            options: [
+              "2 cells and 2 nuclei",
+              "7 cells and 8 haploid nuclei (3 antipodal, 2 polar nuclei in central cell, 1 egg, 2 synergids)",
+              "4 cells and 4 diploid nuclei"
+            ],
+            ans: 1,
+            exp: "3 mitotic divisions of 1 haploid megaspore produce 8 haploid nuclei arranged into 7 cells!"
+          },
+          {
+            q: "3. [6.3] What are the two products of Double Fertilization in flowering plants?",
+            options: [
+              "Two diploid zygotes (2n)",
+              "One Diploid Zygote (2n) and One Triploid Endosperm Nucleus (3n)",
+              "One Haploid Pollen Tube (n) and One Testa"
+            ],
+            ans: 1,
+            exp: "1st Male Gamete (n) + Egg (n) = Diploid Zygote (2n); 2nd Male Gamete (n) + 2 Polar Nuclei (2n) = Triploid Endosperm Nucleus (3n)."
+          },
+          {
+            q: "4. [6.4] After fertilization, what do the Ovule and Integument develop into respectively?",
+            options: [
+              "Ovule -> Fruit | Integument -> Pericarp",
+              "Ovule -> Seed | Integument -> Testa (Seed coat)",
+              "Ovule -> Petal | Integument -> Stigma"
+            ],
+            ans: 1,
+            exp: "The ovule becomes the seed, while its protective integument layers harden into the testa!"
+          }
+        ];
+        renderQuizMission(16, 'Game 4 • Mission 4 of 4', '🏅 Commander’s Final Boss Assessment', questions);
+      }
+    }
+
+    /**************************************************************
+     * 10. INTERACTION HANDLERS FOR MISSIONS 1 - 16
+     **************************************************************/
+    function m1SelectLabel(lbl) {
+      playSfx('click');
+      state.m1SelectedLabel = lbl;
+      floraSpeak(`Selected <strong>${lbl}</strong>! Now click the matching dashed box on the flower cross-section.`);
+      renderMissionWorkspace(1);
+    }
+
+    function m1ClickSlot(slotName) {
+      if (!state.m1SelectedLabel) {
+        playSfx('error');
+        floraSpeak("First click one of the 🏷️ Label Buttons in the green tray above, then click the slot!", 'error');
+        return;
+      }
+      if (state.m1SelectedLabel === slotName) {
+        state.m1Placed[slotName] = slotName;
+        state.m1SelectedLabel = null;
+        const doneAll = ['Stigma', 'Style', 'Ovary', 'Ovule', 'Anther', 'Filament'].every(k => state.m1Placed[k] === k);
+        if (doneAll) {
+          completeMission(1, `Awesome job, Agent! You accurately dissected and labeled all 6 male and female floral structures!`);
+        } else {
+          playSfx('success');
+          floraSpeak(`Spot on! <strong>${slotName}</strong> is placed correctly. Keep going!`);
+        }
+        renderMissionWorkspace(1);
+      } else {
+        playSfx('error');
+        floraSpeak(`Oops! That slot is not for <strong>${state.m1SelectedLabel}</strong>. Read the clue inside the dashed box carefully!`, 'error');
+      }
+    }
+
+    function m2Sort(partName, chosenGroup, actualGroup) {
+      if (chosenGroup === actualGroup) {
+        state.m2Placed[partName] = actualGroup;
+        if (Object.keys(state.m2Placed).length === 8) {
+          completeMission(2, `Brilliant classification! You sorted all 8 floral organs into Stamen, Carpel, and Non-Reproductive structures!`);
+        } else {
+          playSfx('success');
+          floraSpeak(`Correct! <strong>${partName}</strong> belongs to <strong>${actualGroup}</strong>.`);
+        }
+        renderMissionWorkspace(2);
+      } else {
+        playSfx('error');
+        floraSpeak(`Careful, Agent! <strong>${partName}</strong> does not belong to ${chosenGroup}. Remember: Stamen = Anther + Filament; Carpel = Stigma, Style, Ovary, Ovule!`, 'error');
+      }
+    }
+
+    function m3CheckMatch(targetPart) {
+      if (!state.m3SelectedLeft) {
+        playSfx('error');
+        floraSpeak("Click a Floral Structure on the left column first!", 'error');
+        return;
+      }
+      if (state.m3SelectedLeft === targetPart) {
+        state.m3Matched[targetPart] = true;
+        state.m3SelectedLeft = null;
+        if (Object.keys(state.m3Matched).length === 5) {
+          completeMission(3, `All 5 Floral Structures matched with their biological functions!`);
+        } else {
+          playSfx('success');
+          floraSpeak(`Great match! <strong>${targetPart}</strong> linked to its exact biological role.`);
+        }
+        renderMissionWorkspace(3);
+      } else {
+        playSfx('error');
+        floraSpeak(`Not quite! That function does not belong to <strong>${state.m3SelectedLeft}</strong>. Try another card!`, 'error');
+      }
+    }
+
+    function m5Advance(isCorrect, feedback = '') {
+      if (isCorrect) {
+        state.m5Step++;
+        if (state.m5Step >= 3) {
+          completeMission(5, feedback);
+        } else {
+          playSfx('success');
+          floraSpeak(feedback);
+        }
+        renderMissionWorkspace(5);
+      } else {
+        playSfx('error');
+        floraSpeak("Careful! Check the chromosome ploidy: Meiosis comes FIRST (2n -> n tetrad), followed by 1x Mitosis (1 nucleus -> 2 nuclei)!", 'error');
+      }
+    }
+
+    function m6TriggerMitosis() {
+      state.m6MitosisCount++;
+      playSfx('success');
+      const count = Math.pow(2, state.m6MitosisCount);
+      if (state.m6MitosisCount === 3) {
+        floraSpeak(`3rd Mitosis complete! 1 surviving haploid megaspore has divided into <strong>8 haploid nuclei</strong>! Now click the 3 regions in the Ovule on the right.`);
+      } else {
+        floraSpeak(`Mitosis #${state.m6MitosisCount} complete! Now at <strong>${count} haploid nuclei</strong>. Trigger mitosis again!`);
+      }
+      renderMissionWorkspace(6);
+    }
+
+    function m6PlaceRegion(pos) {
+      state.m6PlacedRegions[pos] = true;
+      const r = state.m6PlacedRegions;
+      if (r.top && r.center && r.bottom) {
+        completeMission(6, `Master Embryo Sac Architect! You built the mature 8-nuclei, 7-cell embryo sac (3 antipodal, 2 polar nuclei, 1 egg + 2 synergids)!`);
+      } else {
+        playSfx('success');
+        floraSpeak(`Region positioned! Complete the remaining regions of the embryo sac.`);
+      }
+      renderMissionWorkspace(6);
+    }
+
+    function m7Fix(caseId, isCorrect, exp = '') {
+      if (isCorrect) {
+        state.m7Fixed[caseId] = true;
+        if (Object.keys(state.m7Fixed).length === 3) {
+          completeMission(7, `All 3 biological errors spotted and corrected! You have a sharp eye for meiosis & mitosis!`);
+        } else {
+          playSfx('success');
+          floraSpeak(exp);
+        }
+        renderMissionWorkspace(7);
+      } else {
+        playSfx('error');
+        floraSpeak("That correction is biologically inaccurate! Review the Quick Notes and pick the other fix.", 'error');
+      }
+    }
+
+    function m10Advance(isCorrect, feedback = '') {
+      if (isCorrect) {
+        state.m10Step++;
+        if (state.m10Step >= 3) {
+          completeMission(10, feedback);
+        } else {
+          playSfx('success');
+          floraSpeak(feedback);
+        }
+        renderMissionWorkspace(10);
+      } else {
+        playSfx('error');
+        floraSpeak("Wrong turn! Remember: Tube nucleus leads the tube, Generative nucleus divides by mitosis into 2 male gametes, and entry is via the Micropyle!", 'error');
+      }
+    }
+
+    function m11Fuse(type) {
+      playSfx('success');
+      state.m11Fusions[type] = true;
+      if (type === 'zygote') {
+        floraSpeak("Fusion #1 Complete! <strong>Male Gamete 1 (n) + Egg Cell (n) = Diploid Zygote (2n)</strong>!");
+      } else {
+        floraSpeak("Fusion #2 Complete! <strong>Male Gamete 2 (n) + 2 Polar Nuclei (n+n) = Triploid Endosperm Nucleus (3n)</strong>!");
+      }
+      renderMissionWorkspace(11);
+    }
+
+    function m11CheckMath(isCorrect) {
+      if (isCorrect) {
+        state.m11Fusions.ploidyVerified = true;
+        completeMission(11, `Double Fertilization Lab Mastered! You fused both the 2n Zygote and 3n Endosperm Nucleus and verified the 3n chromosome math!`);
+        renderMissionWorkspace(11);
+      } else {
+        playSfx('error');
+        floraSpeak("Check the math! If Diploid (2n) = 20, then Haploid (n) = 10. Therefore, Triploid (3n) = 3 × 10 = 30 chromosomes!", 'error');
+      }
+    }
+
+    function m13Check(preKey) {
+      if (!state.m13SelectedLeft) {
+        playSfx('error');
+        floraSpeak("Select a Pre-Fertilization structure on the left first!", 'error');
+        return;
+      }
+      if (state.m13SelectedLeft === preKey) {
+        state.m13Matched[preKey] = true;
+        state.m13SelectedLeft = null;
+        if (Object.keys(state.m13Matched).length === 6) {
+          completeMission(13, `All 6 floral structures transformed into their Post-Fertilization fruit & seed outcomes!`);
+        } else {
+          playSfx('success');
+          floraSpeak(`Transformation verified for <strong>${preKey}</strong>!`);
+        }
+        renderMissionWorkspace(13);
+      } else {
+        playSfx('error');
+        floraSpeak(`Mismatch! <strong>${state.m13SelectedLeft}</strong> does not transform into that structure. Check Quick Notes!`, 'error');
+      }
+    }
+
+    function m15Sort(fruitName, chosenCat, actualCat) {
+      if (chosenCat === actualCat) {
+        state.m15Placed[fruitName] = actualCat;
+        if (Object.keys(state.m15Placed).length === 4) {
+          completeMission(15, `Fruit Market Classifier Complete! You mastered Simple, Aggregate, Multiple, and Accessory fruits!`);
+        } else {
+          playSfx('success');
+          floraSpeak(`Correct! <strong>${fruitName}</strong> is a <strong>${actualCat}</strong>.`);
+        }
+        renderMissionWorkspace(15);
+      } else {
+        playSfx('error');
+        floraSpeak(`Not quite! Check the floral origin clue for <strong>${fruitName}</strong>: Simple (1 carpel), Aggregate (many free carpels, 1 flower), Multiple (cluster of flowers), Accessory (receptacle).`, 'error');
+      }
+    }
+
+    function renderQuizMission(missionId, badgeText, titleText, questions) {
+      const ws = document.getElementById('mission-workspace');
+      const ansMapKey = `m${missionId}Answers`;
+      const ansMap = state[ansMapKey];
+      const solvedCount = Object.keys(ansMap).length;
+      const totalQ = questions.length;
+
+      ws.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-emerald-100 pb-3 mb-4">
+          <div>
+            <span class="text-xs font-extrabold uppercase bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">${badgeText}</span>
+            <h3 class="text-xl font-extrabold text-emerald-950 mt-0.5">${titleText} (${solvedCount}/${totalQ} Answered)</h3>
+          </div>
+          <button onclick="state['${ansMapKey}']={}; renderMissionWorkspace(${missionId})" class="text-xs font-bold text-emerald-700 underline">Reset Quiz</button>
+        </div>
+
+        <div class="space-y-4">
+          ${questions.map((item, qIdx) => {
+            const solved = ansMap[qIdx] === true;
+            return `
+              <div class="p-4 rounded-2xl border-2 ${solved ? 'bg-green-50 border-green-500' : 'bg-white border-emerald-300'}">
+                <p class="font-extrabold text-sm sm:text-base text-emerald-950 mb-3">${item.q}</p>
+                <div class="space-y-2">
+                  ${item.options.map((opt, oIdx) => {
+                    const isCorrectOpt = oIdx === item.ans;
+                    return `
+                      <button ${solved ? 'disabled' : ''} onclick="answerQuizMission(${missionId}, ${qIdx}, ${oIdx}, ${item.ans}, ${totalQ}, \`${item.exp.replace(/`/g, "'")}\`)"
+                        class="w-full p-3 rounded-xl border-2 text-left text-xs sm:text-sm font-bold transition ${
+                          solved && isCorrectOpt ? 'bg-green-600 text-white border-green-800' :
+                          solved ? 'bg-gray-100 text-gray-400 border-gray-200' :
+                          'bg-emerald-50/70 hover:bg-amber-100 text-emerald-950 border-emerald-300'
+                        }">
+                        ${String.fromCharCode(65 + oIdx)}. ${opt} ${solved && isCorrectOpt ? ' ✅' : ''}
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+                ${solved ? `<div class="mt-2 text-xs font-bold text-green-900 bg-green-100 px-3 py-1.5 rounded-lg">💡 ${item.exp}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        ${solvedCount === totalQ ? `
+          <div class="mt-5 text-center">
+            <button onclick="goToNextMission()" class="btn-wood px-6 py-3 rounded-xl font-extrabold text-sm">
+              🎉 Mission ${missionId} Complete! ${missionId === 16 ? 'Claim Your Master Certificate 🏆 →' : `Proceed to Mission ${missionId + 1} →`}
+            </button>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function answerQuizMission(missionId, qIdx, chosenIdx, correctIdx, totalQ, explanation) {
+      const ansMapKey = `m${missionId}Answers`;
+      if (chosenIdx === correctIdx) {
+        state[ansMapKey][qIdx] = true;
+        if (Object.keys(state[ansMapKey]).length === totalQ) {
+          completeMission(missionId, `Mission ${missionId} Mastery Confirmed! ${explanation}`);
+        } else {
+          playSfx('success');
+          floraSpeak(`Correct! ${explanation}`);
+        }
+        renderMissionWorkspace(missionId);
+      } else {
+        playSfx('error');
+        floraSpeak(`Not quite right, Agent! Think carefully about the KSSM biological mechanism and try another option!`, 'error');
+      }
+    }
+
+    /**************************************************************
+     * 11. INITIALIZE POLLEN PARTICLES ON LOAD
+     **************************************************************/
+    function initPollenParticles() {
+      const container = document.getElementById('pollen-container');
+      for (let i = 0; i < 14; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'pollen-particle';
+        const size = 6 + Math.random() * 10;
+        dot.style.width = `${size}px`;
+        dot.style.height = `${size}px`;
+        dot.style.left = `${Math.random() * 96}vw`;
+        dot.style.top = `${Math.random() * 92}vh`;
+        dot.style.animationDelay = `${Math.random() * 8}s`;
+        dot.style.animationDuration = `${10 + Math.random() * 10}s`;
+        container.appendChild(dot);
+      }
+    }
+
+    window.onload = function () {
+      initPollenParticles();
+      updateHUD();
+    };
+  </script>
+</body>
+</html>
