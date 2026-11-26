@@ -547,6 +547,9 @@
             </button>
           </div>
         </div>
+
+        <!-- Payment Receipts Log -->
+        <div id="receipts-log-container" class="mt-5"></div>
       </div>
     </section>
 
@@ -684,12 +687,12 @@
   </div>
 
   <!-- ==========================================
-       MODAL 2: SIMULATED PAYMENT CHECKOUT MODAL
+       MODAL 2: PAYMENT CHECKOUT MODAL (FPX / DUITNOW QR / E-WALLET)
   =========================================== -->
   <div id="modal-checkout" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="panel-botany max-w-md w-full p-6">
+    <div class="panel-botany max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b-2 border-emerald-200 pb-3 mb-4">
-        <h3 class="text-xl font-extrabold text-emerald-950">💳 Package Activation & Payment</h3>
+        <h3 class="text-xl font-extrabold text-emerald-950">💳 Package Activation & Payment (RM)</h3>
         <button onclick="toggleModal('modal-checkout', false)" class="bg-red-100 text-red-700 font-bold w-8 h-8 rounded-lg">✕</button>
       </div>
 
@@ -700,19 +703,84 @@
         <p id="checkout-pkg-items" class="text-xs text-emerald-800 mt-1">Unlocks Game 1: Get To Know? & Game 2: Origins of New Life.</p>
       </div>
 
-      <div class="space-y-2 mb-5 text-xs font-bold text-emerald-900">
-        <div class="p-2.5 rounded-xl border-2 border-emerald-400 bg-emerald-50 flex items-center justify-between">
-          <span>🏦 Online Banking (FPX Malaysia)</span>
-          <span class="text-emerald-700">Instant</span>
+      <div class="space-y-2.5 mb-4 text-xs font-bold text-emerald-900">
+        <div>
+          <label class="block mb-1">Student / Buyer Name</label>
+          <input id="pay-buyer-name" type="text" placeholder="e.g., Siti Fatimah"
+            class="w-full px-3 py-2 rounded-xl border-2 border-emerald-300 bg-white text-emerald-950 focus:outline-none focus:border-emerald-600" />
         </div>
-        <div class="p-2.5 rounded-xl border-2 border-emerald-200 bg-white flex items-center justify-between">
-          <span>📱 Touch 'n Go eWallet / GrabPay</span>
-          <span class="text-emerald-700">Instant</span>
+        <div>
+          <label class="block mb-1">Email Address (for Digital Receipt)</label>
+          <input id="pay-buyer-email" type="email" placeholder="e.g., student@email.com"
+            class="w-full px-3 py-2 rounded-xl border-2 border-emerald-300 bg-white text-emerald-950 focus:outline-none focus:border-emerald-600" />
         </div>
       </div>
 
+      <div class="grid grid-cols-3 gap-1.5 mb-3 text-xs font-extrabold">
+        <button type="button" id="tab-pay-fpx" onclick="switchPaymentMethod('fpx')" class="py-2 rounded-xl border-2 bg-emerald-600 text-white border-emerald-900">🏦 FPX Bank</button>
+        <button type="button" id="tab-pay-qr" onclick="switchPaymentMethod('qr')" class="py-2 rounded-xl border-2 bg-white text-emerald-950 border-emerald-300">📱 DuitNow QR</button>
+        <button type="button" id="tab-pay-ewallet" onclick="switchPaymentMethod('ewallet')" class="py-2 rounded-xl border-2 bg-white text-emerald-950 border-emerald-300">👛 E-Wallet</button>
+      </div>
+
+      <!-- FPX Panel -->
+      <div id="panel-pay-fpx" class="space-y-2.5 mb-4 text-xs font-bold text-emerald-900 bg-emerald-50/70 p-3 rounded-xl border border-emerald-200">
+        <div>
+          <label class="block mb-1">Select FPX Bank</label>
+          <select id="pay-fpx-bank" class="w-full px-3 py-2 rounded-xl border-2 border-emerald-300 bg-white text-emerald-950">
+            <option value="Maybank2u">Maybank2u</option>
+            <option value="CIMB Clicks">CIMB Clicks</option>
+            <option value="Bank Islam">Bank Islam</option>
+            <option value="Public Bank">Public Bank</option>
+            <option value="RHB Now">RHB Now</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1">TAC / Approval Code (min. 4 digits)</label>
+          <input id="pay-fpx-tac" type="text" maxlength="8" placeholder="e.g., 482910"
+            class="w-full px-3 py-2 rounded-xl border-2 border-emerald-300 bg-white text-emerald-950" />
+        </div>
+      </div>
+
+      <!-- DuitNow QR Panel -->
+      <div id="panel-pay-qr" class="hidden space-y-2.5 mb-4 text-xs font-bold text-emerald-900 bg-pink-50/70 p-3 rounded-xl border border-pink-200 text-center">
+        <div class="font-extrabold text-pink-800">DUITNOW QR • POLLEN PATROL EDU</div>
+        <div class="inline-block bg-white p-2 rounded-xl border-2 border-pink-400">
+          <svg width="104" height="104" viewBox="0 0 100 100">
+            <rect x="6" y="6" width="24" height="24" fill="#111"/><rect x="11" y="11" width="14" height="14" fill="#fff"/><rect x="15" y="15" width="6" height="6" fill="#111"/>
+            <rect x="70" y="6" width="24" height="24" fill="#111"/><rect x="75" y="11" width="14" height="14" fill="#fff"/><rect x="79" y="15" width="6" height="6" fill="#111"/>
+            <rect x="6" y="70" width="24" height="24" fill="#111"/><rect x="11" y="75" width="14" height="14" fill="#fff"/><rect x="15" y="79" width="6" height="6" fill="#111"/>
+            <rect x="40" y="40" width="20" height="20" fill="#db2777"/>
+            <rect x="42" y="14" width="10" height="8" fill="#111"/><rect x="72" y="44" width="16" height="10" fill="#111"/><rect x="44" y="72" width="14" height="14" fill="#111"/>
+          </svg>
+        </div>
+        <div class="text-left">
+          <label class="block mb-1">Transaction Reference ID</label>
+          <input id="pay-qr-ref" type="text" placeholder="e.g., DN20261126001"
+            class="w-full px-3 py-2 rounded-xl border-2 border-pink-300 bg-white text-emerald-950" />
+        </div>
+      </div>
+
+      <!-- E-Wallet Panel -->
+      <div id="panel-pay-ewallet" class="hidden space-y-2.5 mb-4 text-xs font-bold text-emerald-900 bg-sky-50/70 p-3 rounded-xl border border-sky-200">
+        <div>
+          <label class="block mb-1">E-Wallet Provider</label>
+          <select id="pay-ewallet-provider" class="w-full px-3 py-2 rounded-xl border-2 border-sky-300 bg-white text-emerald-950">
+            <option value="Touch 'n Go eWallet">Touch 'n Go eWallet</option>
+            <option value="GrabPay">GrabPay</option>
+            <option value="ShopeePay">ShopeePay</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1">Mobile Number (+60)</label>
+          <input id="pay-ewallet-phone" type="tel" placeholder="e.g., 019-4920703"
+            class="w-full px-3 py-2 rounded-xl border-2 border-sky-300 bg-white text-emerald-950" />
+        </div>
+      </div>
+
+      <p id="pay-error-msg" class="hidden text-xs font-extrabold text-red-600 mb-3"></p>
+
       <button onclick="confirmSimulatedPayment()" class="btn-leaf w-full py-3.5 rounded-xl font-extrabold text-sm">
-        ✅ Simulate Payment Success & Unlock Now
+        ✅ Confirm Payment & Unlock Now
       </button>
     </div>
   </div>
@@ -788,13 +856,13 @@
           </p>
           <div class="grid grid-cols-1 gap-2">
             <button onclick="setPackageTier('free'); toggleModal('modal-settings', false);" class="py-2 px-3 rounded-xl font-extrabold text-xs bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-400">
-              1. Reset to Free Tier (Notes Only • Games 1–4 Locked)
+1. Reset to Free Tier (Notes Only • Games 1–4 Locked)
             </button>
             <button onclick="setPackageTier('starter'); toggleModal('modal-settings', false);" class="py-2 px-3 rounded-xl font-extrabold text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400">
-              2. Activate Starter Pack (RM 9.90 • Games 1 & 2)
+2. Activate Starter Pack (RM 9.90 • Games 1 & 2)
             </button>
             <button onclick="setPackageTier('mastery'); toggleModal('modal-settings', false);" class="py-2 px-3 rounded-xl font-extrabold text-xs bg-green-600 hover:bg-green-700 text-white border border-green-900">
-              3. Activate Full Mastery Pass (RM 16.90 • All 4 Games)
+3. Activate Full Mastery Pass (RM 16.90 • All 4 Games)
             </button>
           </div>
         </div>
@@ -836,12 +904,14 @@
   =========================================== -->
   <script>
     /**************************************************************
-     * 1. APPLICATION STATE & PACKAGE CONFIGURATION
+- 1. APPLICATION STATE & PACKAGE CONFIGURATION
      **************************************************************/
     const state = {
       screen: 'menu',
       packageTier: 'free', // 'free' | 'starter' | 'mastery'
       pendingCheckoutTier: null,
+      paymentMethod: 'fpx', // 'fpx' | 'qr' | 'ewallet'
+      receipts: [],
       currentNoteSubtopic: 1, // 1..4
       notesMode: 'notes',     // 'notes' | 'interactive'
       currentGameId: 1,       // 1..4
@@ -1010,7 +1080,7 @@
     }
 
     /**************************************************************
-     * 2. DR. FLORA AI FEEDBACK & SPM TIPS
+- 2. DR. FLORA AI FEEDBACK & SPM TIPS
      **************************************************************/
     const SPM_TIPS = [
       "SPM Tip 6.1: Remember! The Stamen (male) = Anther + Filament, while the Carpel (female) = Stigma + Style + Ovary!",
@@ -1050,7 +1120,7 @@
     }
 
     /**************************************************************
-     * 3. PACKAGE ACCESS & PROGRESSION LOGIC
+- 3. PACKAGE ACCESS & PROGRESSION LOGIC
      **************************************************************/
     function hasPackageAccessForGame(gameId) {
       if (state.packageTier === 'mastery') return true;
@@ -1099,6 +1169,7 @@
     function initiateCheckout(tier) {
       playSfx('click');
       state.pendingCheckoutTier = tier;
+      document.getElementById('pay-error-msg').classList.add('hidden');
       if (tier === 'starter') {
         document.getElementById('checkout-pkg-title').textContent = 'Package 2: Starter Game Pack';
         document.getElementById('checkout-pkg-price').textContent = 'RM 9.90';
@@ -1109,12 +1180,93 @@
         document.getElementById('checkout-pkg-price').textContent = isUpgrade ? 'RM 7.00 (Upgrade Price)' : 'RM 16.90';
         document.getElementById('checkout-pkg-items').textContent = 'Unlocks All 4 Games (Game 1 to Game 4) + Printable Botany Master Certificate.';
       }
+      switchPaymentMethod(state.paymentMethod || 'fpx');
       toggleModal('modal-checkout', true);
     }
 
+    function switchPaymentMethod(method) {
+      playSfx('click');
+      state.paymentMethod = method;
+      ['fpx', 'qr', 'ewallet'].forEach(m => {
+        const tab = document.getElementById(`tab-pay-${m}`);
+        const panel = document.getElementById(`panel-pay-${m}`);
+        if (m === method) {
+          tab.className = 'py-2 rounded-xl border-2 bg-emerald-600 text-white border-emerald-900';
+          panel.classList.remove('hidden');
+        } else {
+          tab.className = 'py-2 rounded-xl border-2 bg-white text-emerald-950 border-emerald-300';
+          panel.classList.add('hidden');
+        }
+      });
+    }
+
     function confirmSimulatedPayment() {
+      const buyer = (document.getElementById('pay-buyer-name').value || '').trim();
+      const email = (document.getElementById('pay-buyer-email').value || '').trim();
+      const errEl = document.getElementById('pay-error-msg');
+
+      if (!buyer || !email || !email.includes('@')) {
+        playSfx('error');
+        errEl.textContent = 'Please enter a valid Buyer Name and Email Address.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      let methodDesc = '';
+      if (state.paymentMethod === 'fpx') {
+        const bank = document.getElementById('pay-fpx-bank').value;
+        const tac = (document.getElementById('pay-fpx-tac').value || '').trim();
+        if (tac.length < 4) {
+          playSfx('error');
+          errEl.textContent = 'Please enter a valid FPX TAC / approval code (min. 4 digits).';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        methodDesc = `FPX (${bank} • TAC ${tac})`;
+      } else if (state.paymentMethod === 'qr') {
+        const ref = (document.getElementById('pay-qr-ref').value || '').trim();
+        if (!ref) {
+          playSfx('error');
+          errEl.textContent = 'Please enter your DuitNow QR Transaction Reference ID.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        methodDesc = `DuitNow QR (Ref: ${ref})`;
+      } else {
+        const provider = document.getElementById('pay-ewallet-provider').value;
+        const phone = (document.getElementById('pay-ewallet-phone').value || '').trim();
+        if (phone.length < 8) {
+          playSfx('error');
+          errEl.textContent = 'Please enter a valid mobile number for E-Wallet.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        methodDesc = `${provider} (${phone})`;
+      }
+
+      const targetTier = state.pendingCheckoutTier || 'mastery';
+      const isUpgrade = targetTier === 'mastery' && state.packageTier === 'starter';
+      const amount = targetTier === 'starter' ? 'RM 9.90' : (isUpgrade ? 'RM 7.00' : 'RM 16.90');
+      const pkgLabel = targetTier === 'starter' ? 'Starter Game Pack' : 'Full Mastery Pass';
+
+      state.receipts.unshift({
+        id: 'PP-' + Math.floor(100000 + Math.random() * 900000),
+        date: new Date().toLocaleString('en-MY'),
+        pkg: pkgLabel,
+        amount,
+        method: methodDesc,
+        buyer,
+        email
+      });
+
+      const certNameInput = document.getElementById('cert-student-name');
+      if (certNameInput && !certNameInput.value.trim()) {
+        certNameInput.value = buyer;
+      }
+
+      errEl.classList.add('hidden');
       toggleModal('modal-checkout', false);
-      setPackageTier(state.pendingCheckoutTier || 'mastery');
+      setPackageTier(targetTier);
       showScreen('map');
     }
 
@@ -1183,7 +1335,7 @@
     }
 
     /**************************************************************
-     * 4. SCREEN NAVIGATION
+- 4. SCREEN NAVIGATION
      **************************************************************/
     function showScreen(screenName) {
       playSfx('click');
@@ -1219,7 +1371,7 @@
     }
 
     /**************************************************************
-     * 5. RENDER SCREEN 2: MISSION HUB (5 NODES)
+- 5. RENDER SCREEN 2: MISSION HUB (5 NODES)
      **************************************************************/
     function renderMissionHub() {
       const grid = document.getElementById('map-nodes-grid');
@@ -1318,7 +1470,7 @@
     }
 
     /**************************************************************
-     * 6. SCREEN 3: NOTES & INTERACTIVE MODULE (6.1 - 6.4)
+- 6. SCREEN 3: NOTES & INTERACTIVE MODULE (6.1 - 6.4)
      **************************************************************/
     const FLOWER_HOTSPOTS = {
       stigma: {
@@ -1711,7 +1863,7 @@
     }
 
     /**************************************************************
-     * 7. SCREEN 6: PACKAGES & UNLOCK RENDERER
+- 7. SCREEN 6: PACKAGES & UNLOCK RENDERER
      **************************************************************/
     function renderPackagesScreen() {
       const tier = state.packageTier;
@@ -1736,10 +1888,30 @@
         priceDisp.textContent = 'UNLOCKED';
         priceSub.textContent = 'All 4 Games & Certificate Active';
       }
+
+      const receiptsContainer = document.getElementById('receipts-log-container');
+      if (receiptsContainer) {
+        if (!state.receipts.length) {
+          receiptsContainer.innerHTML = '';
+        } else {
+          receiptsContainer.innerHTML = `
+            <div class="bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 text-xs text-emerald-950 space-y-2">
+              <div class="font-extrabold text-sm text-amber-900">🧾 Payment Receipts (${state.receipts.length})</div>
+              ${state.receipts.map(r => `
+                <div class="bg-white p-3 rounded-xl border border-amber-200">
+                  <strong>${r.id}</strong> • ${r.date}<br/>
+                  <span><strong>${r.pkg}</strong> — <strong>${r.amount}</strong> via ${r.method}</span><br/>
+                  <span class="text-emerald-700">Buyer: ${r.buyer} (${r.email})</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      }
     }
 
     /**************************************************************
-     * 8. SCREEN 4 & 5: GAMEPLAY WORKSPACE & LEVEL COMPLETE SUMMARY
+- 8. SCREEN 4 & 5: GAMEPLAY WORKSPACE & LEVEL COMPLETE SUMMARY
      **************************************************************/
     function openGame(gameId, missionId = null) {
       state.currentGameId = gameId;
@@ -1930,7 +2102,7 @@
     }
 
     /**************************************************************
-     * 9. ALL 16 INTERACTIVE MISSION WORKSPACES
+- 9. ALL 16 INTERACTIVE MISSION WORKSPACES
      **************************************************************/
     function renderMissionWorkspace(missionId) {
       const ws = document.getElementById('mission-workspace');
@@ -2224,13 +2396,13 @@
 
           <div class="grid grid-cols-3 gap-2 mb-5 text-center text-xs font-extrabold">
             <div class="p-3 rounded-xl border-2 ${curStep >= 1 ? 'bg-green-100 border-green-500 text-green-900' : 'bg-amber-50 border-amber-400'}">
-              1. Microspore Mother Cell (2n)<br/><span class="text-[11px]">${curStep >= 1 ? '✅ Meiosis Done' : '⏳ Awaiting Meiosis'}</span>
+1. Microspore Mother Cell (2n)<br/><span class="text-[11px]">${curStep >= 1 ? '✅ Meiosis Done' : '⏳ Awaiting Meiosis'}</span>
             </div>
             <div class="p-3 rounded-xl border-2 ${curStep >= 2 ? 'bg-green-100 border-green-500 text-green-900' : 'bg-amber-50 border-amber-400'}">
-              2. Tetrad of 4 Microspores (n)<br/><span class="text-[11px]">${curStep >= 2 ? '✅ 1x Mitosis Done' : '⏳ Awaiting Mitosis'}</span>
+2. Tetrad of 4 Microspores (n)<br/><span class="text-[11px]">${curStep >= 2 ? '✅ 1x Mitosis Done' : '⏳ Awaiting Mitosis'}</span>
             </div>
             <div class="p-3 rounded-xl border-2 ${curStep >= 3 ? 'bg-green-100 border-green-500 text-green-900' : 'bg-amber-50 border-amber-400'}">
-              3. Mature Pollen Grain (n)<br/><span class="text-[11px]">${curStep >= 3 ? '✅ 2 Nuclei Verified' : '⏳ Tube + Generative'}</span>
+3. Mature Pollen Grain (n)<br/><span class="text-[11px]">${curStep >= 3 ? '✅ 2 Nuclei Verified' : '⏳ Tube + Generative'}</span>
             </div>
           </div>
 
@@ -2866,7 +3038,7 @@
     }
 
     /**************************************************************
-     * 10. INTERACTION HANDLERS FOR MISSIONS 1 - 16
+- 10. INTERACTION HANDLERS FOR MISSIONS 1 - 16
      **************************************************************/
     function m1SelectLabel(lbl) {
       playSfx('click');
@@ -3139,7 +3311,7 @@
     }
 
     /**************************************************************
-     * 11. INITIALIZE POLLEN PARTICLES ON LOAD
+- 11. INITIALIZE POLLEN PARTICLES ON LOAD
      **************************************************************/
     function initPollenParticles() {
       const container = document.getElementById('pollen-container');
